@@ -19,8 +19,8 @@
 # Change the file extension to match the format (.xml for XML, etc...)
 #
 ###
-title: "TODO - Your title"
-abbrev: "TODO - Abbreviation"
+title: "Anonymous Authorization and Rate Limiting for Web Agents"
+abbrev: "Anonymous Web Agents"
 category: info
 
 docname: draft-todo-yourname-protocol-latest
