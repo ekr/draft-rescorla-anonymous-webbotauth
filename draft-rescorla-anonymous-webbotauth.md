@@ -119,6 +119,37 @@ more difficult for sites to precisely select the list of acceptable
 bots.
 
 
+# Architectural Overview
+
+The overall idea, is shown in {{arch-overview}}:
+
+~~~
+Alice         Bob           Issuer             Site
+
+Register --------------------->
+<------------------ Cred[Alice]
+              Register ------->
+                <---- Cred[Bob]
+
+Request + Cred ----------------------------------->
+                             Site only knows Issuer,
+                                   not Alice or Bob
+<------------------------------------------Response
+~~~
+{: #arch-overview title="Architectural Overview" }
+
+Prior to contacting the site, Alice and Bob both register with a
+credential Issuer. They each are issued an anonymous credential, which
+they can use to authenticate to the server.  What makes the credential
+anonymous is that the site only learns that someone with a credential
+from the Issuer is authenticating, not whether it's Alice or Bob. This
+prevents the site from discriminating _between_ customers of the
+same issuer, although it can discriminate between issuers.
+
+
+
+
+
 
 
 
