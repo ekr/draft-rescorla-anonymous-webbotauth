@@ -48,6 +48,27 @@ informative:
         org: "Cloudflare"
     date: 2025
     target: "https://radar.cloudflare.com/year-in-review/2025"
+  PACT-Issue:
+    title: "Private Access Control Tokens"
+    author:
+      -
+        ins: "D. Jackson"
+        name: "Dennis Jackson"
+    date: 2025-12-02
+    target: "https://github.com/antifraudcg/proposals/issues/22"
+  IACR-2025-2080:
+    title: "Issuer Hiding for BBS-Based Anonymous Credentials"
+    author:
+      -
+        ins: "J. Katz"
+        name: "Jonathan Katz"
+        org: "Google"
+      -
+        ins: "M. Sefranek"
+        name: "Marek Sefranek"
+        org: "TU Wien"
+    date: 2025-11-10
+    target: "https://eprint.iacr.org/2025/2080"
 
 ...
 
@@ -146,25 +167,121 @@ from the Issuer is authenticating, not whether it's Alice or Bob. This
 prevents the site from discriminating _between_ customers of the
 same issuer, although it can discriminate between issuers.
 
+As a result, while it is possible to distinguish authenticated from
+unauthenticated bots, it is not possible to use the authentication
+method to either (1) selectively block individual bots or (2)
+determine which bots are accessing which resources.  It may still be
+possible to identify bots via other mechanisms such as IP address or
+fingerprinting.
+
+In some cases it may be sufficient merely to identify the issuer, for
+instance if the issuer performs some vetting to ensure policy
+compliance. However, in some cases this may be insufficient, as
+discussed below.
 
 
+## Rate Limiting
+
+In some cases it may be desirable to limit any individual agent to a
+specific number of requests. For example:
+
+* A given issuer may have a large number of subscribers but only
+  a few may access a given site. In this case, overall rate limits
+  for an issuer will not be effective, but individual rate limits
+  are.
+
+* A given issuer may have multiple tiers of subscribers that have
+  undergone different amounts of vetting and therefore should be
+  allowed to offer different amounts of load. Individual rate limits
+  permit this while maintaining a large anonymity set.
+
+{::comment}
+## Misbehavior Reporting
+
+TODO
+{:/comment}
 
 
+## Issuer Hiding
+
+Conversely, in some cases, it is desirable to conceal which of a set
+of issuers issued a credential. As a concrete example, the IETF
+PrivacyPass WG is designing anonymous credentials that can be issued to
+individuals indicating that they have passed some set of checks
+indicating that they represent a human. As discussed below, it may be
+possible to use the same type of credential for PrivacyPass and for
+anonymous bot authentication, even if the issuers for those
+credentials are different. A site which accepts both credentials
+for users and bots does not necessarily need to know which type
+of user a given request comes from--as long as there is some
+rate limiting to prevent individual credentials from being used
+for large scale bot activity--in which case it may be desirable
+to instead show that a user has a valid credential from _either_
+the issuer for user or the issuer for bots without revealing which.
 
 
+# Issuance Models
+
+Anonymous credentials are compatible with a variety of issuance
+models, as discussed in this section.
+
+## Independent Issuers
+
+Probably the most natural approach is to have one or more independent
+issuers, each of which publishes the policy that it uses to issue
+credentials (e.g., verifying corporate existence, subject pays $100,
+etc.). Sites can then select which issuers have policies they are
+willing to accept. It is also possible to have multiple issuers
+who conform to a common set of policies, as in the WebPKI, where
+each CA has to meet the same requirements, but site operators
+have the choice of which CA to use.
 
 
+## Server as Issuer
+
+It is also possible for servers to act as their own issuer. This is
+not likely to be practical for small sites, as bots will simply
+opt not to authenticate to those sites at all. However, a large
+CDN which hosts many sites might opt to operate its own issuer,
+and it could be practical for bots to register with such an
+issuer.
 
 
+## Number of Issuers
+
+In general, it is desirable to have for bots to be able to acquire
+a relatively small number of credentials and have high confidence that
+those credentials will be compatible with most if not all of the
+sites that the bot wishes to contact. This can be most straightforwardly
+accomplished if there is only a small number of issuers, but it can
+also work if there are a larger number of issuers but sites converge
+on a relatively small number of policies (expressed as which issuers
+they support) such that a bot can acquire a set of credentials that
+covers all of those policies. The least desirable outcome is if
+bots routinely are prompted to provide credentials for a new issuer.
 
 
+# Relationship to Existing Technologies
 
+There is significant overlap with existing work on anonymous
+authentication happening in the PrivacyPass WG and in the W3C
+AntiFraud Community Group. While that work is directed towards
+access control for users, the same cryptographic techniques
+can be used to authenticate bots. A good description of
+the vision and requirements can be found at {{PACT-Issue}}.
+There are a number of potential cryptographic techniques
+that can be used to issue anonymous rate-limited credentials
+including Anonymous Credit Tokens (ACT) {{?I-D.schlesinger-cfrg-act}}
+and Anonymous Rate Limited Credentials (ARC) {{?I-D.yun-cfrg-arc}}.
+Katz and Sefranek {{IACR-2025-2080}} have published techniques
+for hiding which issuer out of a set of issuers was associated
+with a given credential.
 
+The ideal scenario would be to be able to use compatible tokens
+for users and bots, differing only in the issuance policies,
+the issuers, and the rate limits.
 
-
-
-
-
+# Use Case Analysis
 
 
 
