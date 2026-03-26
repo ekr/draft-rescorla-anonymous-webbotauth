@@ -283,6 +283,80 @@ the issuers, and the rate limits.
 
 # Use Case Analysis
 
+{{I-D.nottingham-webbotauth-use-cases}} describes a set of
+use cases for web bot authentication. The mechanisms described
+in this document address some but not all of these use cases.
+This is intentional rather than a deficiency; the objective is
+to address use cases which are compatible with limiting the
+negative impact of bots while avoiding making it trivial for
+sites to discriminate against individual bots. The remainder
+of this section addresses each use case individually.
+
+## Mitigating Volumetric Abuse by Bots
+
+This document directly addresses the topic of volumetric abuse,
+because bots can be authenticated and authenticated bots can be
+restricted to specific bandwidth limits. Once a bot has exceeded
+its limit, it can be blocked.
+
+## Controlling Access by Bots
+
+{{I-D.nottingham-webbotauth-use-cases}}
+provides the following example applications of controlling
+access:
+
+>   *  Only allow access by bots on an allow list;
+>
+>   *  Disallow access to bots on an explicit deny list;
+>
+>   *  Condition access upon meeting some criteria (e.g., non-profit,
+>      certification by a third party);
+>
+>   *  Condition access upon participation in some scheme or protocol
+>      (e.g., payment for access);
+
+As noted by the draft:
+
+>   Note that the first two imply some notion of bots being tied to a
+>   real-world identity, whereas the remaining do not necessarily require
+>   it.
+
+In general, the mechanism in this document can potentially used for the
+second two use cases and can be used for some versions of the first two
+use cases. Specifically, because allow and deny lists are enforced at
+the issuer, any given allow or deny list needs to be fairly widely
+used--or at least used at a big site--in order to be practical. For
+instance, an issuer could have the policy not to issue to any bot which
+was illegal to do business with in a given jurisdiction, because many
+sites might be interested in such a policy, but a policy where a
+site doesn't want to allow access by a direct competitor is more difficult
+to execute.
+
+## Providing Different Content to Bots
+
+The mechanisms in this document may be usable to provide different
+content to bots generally than humans depending on the structure of issuers
+(e.g., does a given issuer issue to both bots and to humans) and
+whether techniques are used to conceal which issuer is in use.
+However, they are not generally useful to provide different ocntent
+to specific bots.
+
+
+## Auditing Bot Behavior
+
+This use case is not addressed by this document.
+
+## Classifying Traffic
+
+Because this use case does not depend on determining which bot is which,
+but only which traffic is human versus bot, the mechanisms in this
+document may be able to address this use case, depending on the
+ultimate deployment model, in particular whether bots and humans
+use different issuers and whether the issuer is concealed.
+
+## Authenticating Site Services
+
+This use case is not addressed by this document.
 
 
 # Conventions and Definitions
