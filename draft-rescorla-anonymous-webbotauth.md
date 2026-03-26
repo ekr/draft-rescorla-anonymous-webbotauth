@@ -284,7 +284,7 @@ the issuers, and the rate limits.
 # Use Case Analysis
 
 {{I-D.nottingham-webbotauth-use-cases}} describes a set of
-use cases for web bot authentication. The mechanisms described
+use cases for web bot authentication. The architecture described
 in this document address some but not all of these use cases.
 This is intentional rather than a deficiency; the objective is
 to address use cases which are compatible with limiting the
@@ -321,7 +321,7 @@ As noted by the draft:
 >   real-world identity, whereas the remaining do not necessarily require
 >   it.
 
-In general, the mechanism in this document can potentially used for the
+In general, the architecture in this document can potentially used for the
 second two use cases and can be used for some versions of the first two
 use cases. Specifically, because allow and deny lists are enforced at
 the issuer, any given allow or deny list needs to be fairly widely
@@ -334,7 +334,7 @@ to execute.
 
 ## Providing Different Content to Bots
 
-The mechanisms in this document may be usable to provide different
+The architecture in this document may be usable to provide different
 content to bots generally than humans depending on the structure of issuers
 (e.g., does a given issuer issue to both bots and to humans) and
 whether techniques are used to conceal which issuer is in use.
@@ -349,7 +349,7 @@ This use case is not addressed by this document.
 ## Classifying Traffic
 
 Because this use case does not depend on determining which bot is which,
-but only which traffic is human versus bot, the mechanisms in this
+but only which traffic is human versus bot, the architecture in this
 document may be able to address this use case, depending on the
 ultimate deployment model, in particular whether bots and humans
 use different issuers and whether the issuer is concealed.
@@ -366,7 +366,41 @@ This use case is not addressed by this document.
 
 # Security Considerations
 
-TODO Security
+The precise security and privacy details of a system of this type
+depend on the cryptographic mechanism being deployed. However, it
+is possible to make some general observations.
+
+## Anonymity Set
+
+The anonymity set for a given transaction is the set of credentials
+associated with a given issuer, or, if issuer hiding is used, the set
+of credentials associated with the set of issuers. However, it is
+still possible to learn information about the client by manipulating
+the issuer set. For example, a site acting as an issuer could use
+different keys for each user or a site could use different issuer
+subsets to identify which of a set of issuers was in use.
+Transparency/consistency mechansims like
+{{?I-D.ietf-privacypass-key-consistency}} may be useful in detecting
+this form of attack.
+
+
+## Credential Misuse
+
+Because clients are anonymous, some forms of misuse are harder to
+manage. For example:
+
+* Two clients can collude to exceed rate limits if they are
+  interacting with disjoint sites.
+
+* If registration standards are low and registration is cheap
+  a bot can obtain multiple credentials.
+
+* Patterns of misuse (e.g., credential stuffing) become harder
+  to detect.
+
+Note that existing mechanisms, such as IP address, will continue
+to be usable, but the techniques described in this document
+may not add to the server's ability to address these issues.
 
 
 # IANA Considerations
