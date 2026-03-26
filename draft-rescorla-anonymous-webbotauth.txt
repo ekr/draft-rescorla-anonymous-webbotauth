@@ -1,0 +1,483 @@
+
+
+
+
+Network Working Group                                        E. Rescorla
+Internet-Draft                                               Independent
+Intended status: Informational                             26 March 2026
+Expires: 27 September 2026
+
+
+        Anonymous Authorization and Rate Limiting for Web Agents
+               draft-rescorla-anonymous-webbotauth-latest
+
+Abstract
+
+   Automated agents ("bots") represent a large fraction of the traffic
+   to many Web sites.  In some cases, this traffic is desired, in others
+   undesired, and in yet others, desired as long as it remains within
+   certain rate limits.  This memo describes an overall architecture for
+   authorizing bot traffic while protecting anonymous access.
+
+About This Document
+
+   This note is to be removed before publishing as an RFC.
+
+   The latest revision of this draft can be found at
+   https://ekr.github.io/draft-rescorla-anonymous-webbotauth/draft-
+   rescorla-anonymous-webbotauth.html.  Status information for this
+   document may be found at https://datatracker.ietf.org/doc/draft-
+   rescorla-anonymous-webbotauth/.
+
+   Source for this draft and an issue tracker can be found at
+   https://github.com/ekr/draft-rescorla-anonymous-webbotauth.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 27 September 2026.
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction
+   2.  Architectural Overview
+     2.1.  Rate Limiting
+     2.2.  Issuer Hiding
+   3.  Issuance Models
+     3.1.  Independent Issuers
+     3.2.  Server as Issuer
+     3.3.  Number of Issuers
+   4.  Relationship to Existing Technologies
+   5.  Use Case Analysis
+     5.1.  Mitigating Volumetric Abuse by Bots
+     5.2.  Controlling Access by Bots
+     5.3.  Providing Different Content to Bots
+     5.4.  Auditing Bot Behavior
+     5.5.  Classifying Traffic
+     5.6.  Authenticating Site Services
+   6.  Conventions and Definitions
+   7.  Security Considerations
+     7.1.  Anonymity Set
+     7.2.  Credential Misuse
+   8.  IANA Considerations
+   9.  References
+     9.1.  Normative References
+     9.2.  Informative References
+   Acknowledgments
+   Author's Address
+
+1.  Introduction
+
+   Automated agents ("bots") represent a large fraction of the traffic
+   to many Web sites.  For example, Wikimedia reports that about 35% of
+   its traffic is from bots [PCMag-Wikipedia] and Cloudflare reports
+   that over 50% of traffic is automated [Cloudflare-2025].  High
+   traffic loads--even when from otherwise desired bots--can have
+   negative impacts on sites in terms of performance, stability, and
+   operational costs.
+
+   In addition, there may be certain types of bot traffic that sites
+   which to heavily restrict or block entirely.  For example:
+
+   *  Volumetric traffic intended to create a DoS attack on the site.
+
+   *  Non-volumetric traffic intended to attack the site.
+
+   *  Scraping for specific purposes such as training AI agents.
+
+   [I-D.nottingham-webbotauth-use-cases] provides a more complete list
+   of potential use cases.
+
+   The obvious way to address undesired bot traffic is to require bots
+   to authenticate to the server.  The overall idea here is that sites
+   can use behavioral analysis to determine when traffic from a given
+   endpoint appears bot-like (e.g., is high volume, has low latency
+   between requests, appears to be retrieving the entire site, etc.) and
+   restrict access by those endpoints unless they authenticate and the
+   resulting identity is acceptable to the site.
+   [I-D.meunier-webbotauth-registry] describes one such architecture,
+   where identities are rooted in the DNS and bots use digital
+   signatures to tie their activitity to a given identity.
+
+   While directly identifying each bot allows the site to precisely
+   monitor bots behavior and restrict or block bots that it believes are
+   misbehaving, it also has potential negative effects on the open Web,
+   including:
+
+   *  Allowing sites to precisely discriminate against specific bots,
+      even when those bots are acting in the public interest.  For
+      example:
+
+      -  Government sites might block bots which are tracking law
+         enforcement activity.
+
+      -  Employment or housing sites might block bots which are
+         monitoring for discriminatory behavior.
+
+      -  Shopping sites might block bots used for price comparison.
+
+   *  Preventing users and groups from being able to anonymously
+      retrieve Web content using automated tools.
+
+   This document describes an alternative architecture that allows for
+   anonymous authorization and rate limiting of bots while avoiding
+   directly identifying individual bots, thus making it more difficult
+   for sites to precisely select the list of acceptable bots.
+
+2.  Architectural Overview
+
+   The overall idea, is shown in Figure 1:
+
+   Alice         Bob           Issuer             Site
+
+   Register --------------------->
+   <------------------ Cred[Alice]
+                 Register ------->
+                   <---- Cred[Bob]
+
+   Request + Cred ----------------------------------->
+                                Site only knows Issuer,
+                                      not Alice or Bob
+   <------------------------------------------Response
+
+                      Figure 1: Architectural Overview
+
+   Prior to contacting the site, Alice and Bob both register with a
+   credential Issuer.  They each are issued an anonymous credential,
+   which they can use to authenticate to the server.  What makes the
+   credential anonymous is that the site only learns that someone with a
+   credential from the Issuer is authenticating, not whether it's Alice
+   or Bob. This prevents the site from discriminating _between_
+   customers of the same issuer, although it can discriminate between
+   issuers.
+
+   As a result, while it is possible to distinguish authenticated from
+   unauthenticated bots, it is not possible to use the authentication
+   method to either (1) selectively block individual bots or (2)
+   determine which bots are accessing which resources.  It may still be
+   possible to identify bots via other mechanisms such as IP address or
+   fingerprinting.
+
+   In some cases it may be sufficient merely to identify the issuer, for
+   instance if the issuer performs some vetting to ensure policy
+   compliance.  However, in some cases this may be insufficient, as
+   discussed below.
+
+2.1.  Rate Limiting
+
+   In some cases it may be desirable to limit any individual agent to a
+   specific number of requests.  For example:
+
+   *  A given issuer may have a large number of subscribers but only a
+      few may access a given site.  In this case, overall rate limits
+      for an issuer will not be effective, but individual rate limits
+      are.
+
+   *  A given issuer may have multiple tiers of subscribers that have
+      undergone different amounts of vetting and therefore should be
+      allowed to offer different amounts of load.  Individual rate
+      limits permit this while maintaining a large anonymity set.
+
+2.2.  Issuer Hiding
+
+   Conversely, in some cases, it is desirable to conceal which of a set
+   of issuers issued a credential.  As a concrete example, the IETF
+   PrivacyPass WG is designing anonymous credentials that can be issued
+   to individuals indicating that they have passed some set of checks
+   indicating that they represent a human.  As discussed below, it may
+   be possible to use the same type of credential for PrivacyPass and
+   for anonymous bot authentication, even if the issuers for those
+   credentials are different.  A site which accepts both credentials for
+   users and bots does not necessarily need to know which type of user a
+   given request comes from--as long as there is some rate limiting to
+   prevent individual credentials from being used for large scale bot
+   activity--in which case it may be desirable to instead show that a
+   user has a valid credential from _either_ the issuer for user or the
+   issuer for bots without revealing which.
+
+3.  Issuance Models
+
+   Anonymous credentials are compatible with a variety of issuance
+   models, as discussed in this section.
+
+3.1.  Independent Issuers
+
+   Probably the most natural approach is to have one or more independent
+   issuers, each of which publishes the policy that it uses to issue
+   credentials (e.g., verifying corporate existence, subject pays $100,
+   etc.).  Sites can then select which issuers have policies they are
+   willing to accept.  It is also possible to have multiple issuers who
+   conform to a common set of policies, as in the WebPKI, where each CA
+   has to meet the same requirements, but site operators have the choice
+   of which CA to use.
+
+3.2.  Server as Issuer
+
+   It is also possible for servers to act as their own issuer.  This is
+   not likely to be practical for small sites, as bots will simply opt
+   not to authenticate to those sites at all.  However, a large CDN
+   which hosts many sites might opt to operate its own issuer, and it
+   could be practical for bots to register with such an issuer.
+
+3.3.  Number of Issuers
+
+   In general, it is desirable to have for bots to be able to acquire a
+   relatively small number of credentials and have high confidence that
+   those credentials will be compatible with most if not all of the
+   sites that the bot wishes to contact.  This can be most
+   straightforwardly accomplished if there is only a small number of
+   issuers, but it can also work if there are a larger number of issuers
+   but sites converge on a relatively small number of policies
+   (expressed as which issuers they support) such that a bot can acquire
+   a set of credentials that covers all of those policies.  The least
+   desirable outcome is if bots routinely are prompted to provide
+   credentials for a new issuer.
+
+4.  Relationship to Existing Technologies
+
+   There is significant overlap with existing work on anonymous
+   authentication happening in the PrivacyPass WG and in the W3C
+   AntiFraud Community Group.  While that work is directed towards
+   access control for users, the same cryptographic techniques can be
+   used to authenticate bots.  A good description of the vision and
+   requirements can be found at [PACT-Issue].  There are a number of
+   potential cryptographic techniques that can be used to issue
+   anonymous rate-limited credentials including Anonymous Credit Tokens
+   (ACT) [I-D.schlesinger-cfrg-act] and Anonymous Rate Limited
+   Credentials (ARC) [I-D.yun-cfrg-arc].  Katz and Sefranek
+   [IACR-2025-2080] have published techniques for hiding which issuer
+   out of a set of issuers was associated with a given credential.
+
+   The ideal scenario would be to be able to use compatible tokens for
+   users and bots, differing only in the issuance policies, the issuers,
+   and the rate limits.
+
+5.  Use Case Analysis
+
+   [I-D.nottingham-webbotauth-use-cases] describes a set of use cases
+   for web bot authentication.  The architecture described in this
+   document address some but not all of these use cases.  This is
+   intentional rather than a deficiency; the objective is to address use
+   cases which are compatible with limiting the negative impact of bots
+   while avoiding making it trivial for sites to discriminate against
+   individual bots.  The remainder of this section addresses each use
+   case individually.
+
+5.1.  Mitigating Volumetric Abuse by Bots
+
+   This document directly addresses the topic of volumetric abuse,
+   because bots can be authenticated and authenticated bots can be
+   restricted to specific bandwidth limits.  Once a bot has exceeded its
+   limit, it can be blocked.
+
+5.2.  Controlling Access by Bots
+
+   [I-D.nottingham-webbotauth-use-cases] provides the following example
+   applications of controlling access:
+
+      -  Only allow access by bots on an allow list;
+
+      -  Disallow access to bots on an explicit deny list;
+
+      -  Condition access upon meeting some criteria (e.g., non-profit,
+         certification by a third party);
+
+      -  Condition access upon participation in some scheme or protocol
+         (e.g., payment for access);
+
+   As noted by the draft:
+
+      Note that the first two imply some notion of bots being tied to a
+      real-world identity, whereas the remaining do not necessarily
+      require it.
+
+   In general, the architecture in this document can potentially used
+   for the second two use cases and can be used for some versions of the
+   first two use cases.  Specifically, because allow and deny lists are
+   enforced at the issuer, any given allow or deny list needs to be
+   fairly widely used--or at least used at a big site--in order to be
+   practical.  For instance, an issuer could have the policy not to
+   issue to any bot which was illegal to do business with in a given
+   jurisdiction, because many sites might be interested in such a
+   policy, but a policy where a site doesn't want to allow access by a
+   direct competitor is more difficult to execute.
+
+5.3.  Providing Different Content to Bots
+
+   The architecture in this document may be usable to provide different
+   content to bots generally than humans depending on the structure of
+   issuers (e.g., does a given issuer issue to both bots and to humans)
+   and whether techniques are used to conceal which issuer is in use.
+   However, they are not generally useful to provide different ocntent
+   to specific bots.
+
+5.4.  Auditing Bot Behavior
+
+   This use case is not addressed by this document.
+
+5.5.  Classifying Traffic
+
+   Because this use case does not depend on determining which bot is
+   which, but only which traffic is human versus bot, the architecture
+   in this document may be able to address this use case, depending on
+   the ultimate deployment model, in particular whether bots and humans
+   use different issuers and whether the issuer is concealed.
+
+5.6.  Authenticating Site Services
+
+   This use case is not addressed by this document.
+
+6.  Conventions and Definitions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+7.  Security Considerations
+
+   The precise security and privacy details of a system of this type
+   depend on the cryptographic mechanism being deployed.  However, it is
+   possible to make some general observations.
+
+7.1.  Anonymity Set
+
+   The anonymity set for a given transaction is the set of credentials
+   associated with a given issuer, or, if issuer hiding is used, the set
+   of credentials associated with the set of issuers.  However, it is
+   still possible to learn information about the client by manipulating
+   the issuer set.  For example, a site acting as an issuer could use
+   different keys for each user or a site could use different issuer
+   subsets to identify which of a set of issuers was in use.
+   Transparency/consistency mechansims like
+   [I-D.ietf-privacypass-key-consistency] may be useful in detecting
+   this form of attack.
+
+7.2.  Credential Misuse
+
+   Because clients are anonymous, some forms of misuse are harder to
+   manage.  For example:
+
+   *  Two clients can collude to exceed rate limits if they are
+      interacting with disjoint sites.
+
+   *  If registration standards are low and registration is cheap a bot
+      can obtain multiple credentials.
+
+   *  Patterns of misuse (e.g., credential stuffing) become harder to
+      detect.
+
+   Note that existing mechanisms, such as IP address, will continue to
+   be usable, but the techniques described in this document may not add
+   to the server's ability to address these issues.
+
+8.  IANA Considerations
+
+   This document has no IANA actions.
+
+9.  References
+
+9.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/rfc/rfc2119>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+9.2.  Informative References
+
+   [Cloudflare-2025]
+              Cloudflare, "Cloudflare 2025 Year in Review", 2025,
+              <https://radar.cloudflare.com/year-in-review/2025>.
+
+   [I-D.ietf-privacypass-key-consistency]
+              Davidson, A., Finkel, M., Thomson, M., and C. A. Wood,
+              "Key Consistency and Discovery", Work in Progress,
+              Internet-Draft, draft-ietf-privacypass-key-consistency-01,
+              10 July 2023, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-privacypass-key-consistency-01>.
+
+   [I-D.meunier-webbotauth-registry]
+              Guerreiro, M., Kirazci, U., and T. Meunier, "Registry and
+              Signature Agent card for Web bot auth", Work in Progress,
+              Internet-Draft, draft-meunier-webbotauth-registry-01, 20
+              October 2025, <https://datatracker.ietf.org/doc/html/
+              draft-meunier-webbotauth-registry-01>.
+
+   [I-D.nottingham-webbotauth-use-cases]
+              Nottingham, M., "Use Cases for Authentication of Web
+              Bots", Work in Progress, Internet-Draft, draft-nottingham-
+              webbotauth-use-cases-01, 18 January 2026,
+              <https://datatracker.ietf.org/doc/html/draft-nottingham-
+              webbotauth-use-cases-01>.
+
+   [I-D.schlesinger-cfrg-act]
+              Schlesinger, S. and J. Katz, "Anonymous Credit Tokens",
+              Work in Progress, Internet-Draft, draft-schlesinger-cfrg-
+              act-01, 13 February 2026,
+              <https://datatracker.ietf.org/doc/html/draft-schlesinger-
+              cfrg-act-01>.
+
+   [I-D.yun-cfrg-arc]
+              Yun, C. and C. A. Wood, "Anonymous Rate-Limited
+              Credentials", Work in Progress, Internet-Draft, draft-yun-
+              cfrg-arc-01, 6 August 2025,
+              <https://datatracker.ietf.org/doc/html/draft-yun-cfrg-arc-
+              01>.
+
+   [IACR-2025-2080]
+              Katz, J. and M. Sefranek, "Issuer Hiding for BBS-Based
+              Anonymous Credentials", 10 November 2025,
+              <https://eprint.iacr.org/2025/2080>.
+
+   [PACT-Issue]
+              Jackson, D., "Private Access Control Tokens", 2 December
+              2025,
+              <https://github.com/antifraudcg/proposals/issues/22>.
+
+   [PCMag-Wikipedia]
+              Kan, L., "Wikipedia Faces Flood of AI Bots That Are
+              'Eating Bandwidth,' Raising Costs", 14 February 2024,
+              <https://www.pcmag.com/news/wikipedia-faces-flood-of-ai-
+              bots-that-are-eating-bandwidth-raising-costs>.
+
+Acknowledgments
+
+   TODO acknowledge.
+
+Author's Address
+
+   Eric Rescorla
+   Independent
+   Email: ekr@rtfm.com
