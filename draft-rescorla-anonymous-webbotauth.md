@@ -77,8 +77,9 @@ informative:
 Automated agents ("bots") represent a large fraction of the traffic
 to many Web sites. In some cases, this traffic is desired, in others
 undesired, and in yet others, desired as long as it remains within
-certain rate limits. This memo describes an overall architecture
-for authorizing bot traffic while protecting anonymous access.
+certain rate limits. This memo describes a system that allows Web site operators
+to distinguish wanted from unwanted traffic, while not tying a given request to
+a specific sender.
 
 
 --- middle
@@ -104,20 +105,17 @@ to heavily restrict or block entirely. For example:
 {{?I-D.nottingham-webbotauth-use-cases}} provides a more complete
 list of potential use cases.
 
-The obvious way to address undesired bot traffic is to require
-bots to authenticate to the server. The overall idea here is
-that sites can use behavioral analysis to determine when traffic
-from a given endpoint appears bot-like (e.g., is high volume,
-has low latency between requests, appears to be retrieving the
-entire site, etc.) and restrict access by those endpoints unless
-they authenticate and the resulting identity is acceptable to
-the site. {{?I-D.meunier-webbotauth-registry}} describes
-one such architecture, where identities are rooted in the
-DNS and bots use digital signatures to tie their activitity
-to a given identity.
+The traditional way that websites discriminate between clients is with client
+authentication.  Sites can use behavioral analysis to determine when traffic
+from a given endpoint appears bot-like (e.g., is high volume, has low latency
+between requests, appears to be retrieving the entire site, etc.) and restrict
+access by those endpoints unless they authenticate and the resulting identity is
+acceptable to the site. {{?I-D.meunier-webbotauth-registry}} describes one such
+architecture, where identities are rooted in the DNS and bots use digital
+signatures to tie their activitity to a given identity.
 
 While directly identifying each bot allows the site to precisely
-monitor bots behavior and restrict or block bots that it believes
+monitor bots' behavior and restrict or block bots that it believes
 are misbehaving, it also has potential negative effects on the
 open Web, including:
 
@@ -133,11 +131,15 @@ open Web, including:
 - Preventing users and groups from being able to anonymously
   retrieve Web content using automated tools.
 
-This document describes an alternative architecture that allows
-for anonymous authorization and rate limiting of bots while
-avoiding directly identifying individual bots, thus making it
-more difficult for sites to precisely select the list of acceptable
-bots.
+In many use cases, it is possible to resolve this tension using anonymous
+credentials.  When a bot presents an anonymous credential, the Web site learns
+that the bot is part of some set of authorized bots -- say those whose operators
+have agreed to good behavior -- and not the specific identity of the bot or the
+bot operator.
+
+This document describes an architecture for using anonymous credential to
+authenticate bots to websites.  In addition to laying out how the system works,
+we describe the trade-offs between anonymity and fine-grained abuse mitigation.
 
 
 # Architectural Overview
@@ -179,6 +181,21 @@ instance if the issuer performs some vetting to ensure policy
 compliance. However, in some cases this may be insufficient, as
 discussed below.
 
+{::comment}
+RLB - I think the doc would be stronger if it came out with a concrete technical
+proposal, even if it's only notional.  Like you could say the protocol is ARC
+and then explain how to do various use cases with various arrangements of
+issuers.  You're trying to compete against a very concrete proposal, so any
+hand-waviness is weakness, more of a weakness than getting details wrong IMO.
+
+RLB - Is the requirement here that the website is unable to distinguish requests
+from Alice and Bob?  Or is it acceptable for the website to have an consistent
+idea of who the client is, so the website would see two streams of requests, and
+just woudln't know which stream is Alice's / Bob's.  Might simplify and make
+more anti-abuse possible, but obv lower grade of anonymity.  You still want
+anonymous credentials (a) so that the issuer can impose criteria on creating
+identities and (b) to address issuer/verifier collusion.
+{:/comment}
 
 ## Rate Limiting
 
@@ -320,6 +337,15 @@ As noted by the draft:
 >   Note that the first two imply some notion of bots being tied to a
 >   real-world identity, whereas the remaining do not necessarily require
 >   it.
+
+{::comment}
+RLB - I would just say that anonymous credentials are consistent with all of these
+cases.  E.g., if you had an issuer / bit in the credential that says "the holder
+of this credential is on the allow list".
+
+RLB - It might be good to call out above (say arch-overview) the general
+approach of shifting semantics from the verifier to the issuer.
+{:/comment}
 
 In general, the architecture in this document can potentially used for the
 second two use cases and can be used for some versions of the first two
