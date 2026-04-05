@@ -350,6 +350,54 @@ nullifier tied to the Issuer's domain name. While the proof itself
 varies between presentations, the nullifier remains the same and
 therefore can be used to detect replay.
 
+Because we are using a generic ZK system it should also be
+possible to use it to conceal the  Attester if desired: for
+example if there are multiple Attesters who follow equivalent
+vetting procedures, then the Issuer does not need to know which
+Attester the Client used; the ZKP can be designed to prove
+that the Client has a Credential from one of a set of Attesters
+within the same equivalence class.
+
+
+## Alternate Cryptographic Approaches
+
+This section considers a number of alternate cryptographic
+approaches and explains the choice of primitives in this
+section.
+
+### Only Generic Zero-Knowledge Proofs
+
+In principle, it is possible to omit the use of ARC tokens
+and instead have the Client authenticate each transaction
+directly to the Origin. However, even efficient generic ZKP systems
+like Longfellow-ZK have far higher computational and bandwidth
+costs than more limited systems such as the one used in ARC.
+Using a generic ZKP system to demonstrate ownership of
+an attested Credential to the Issuer and then using that
+single interaction to obtain an ARC token makes it possible
+to amortize the generic proof over a large number of subsequent
+interactions.
+
+### Other Attestation Structures
+
+There are a number of other potential ways to convey attestations
+to the the Issuer, but each fails to fulfill one of the requirements
+in {{auth-issuer}}.
+
+* _Non-anonymous credentials_ allow for linkage of bots at redemption
+  time.
+* _Single-show credentials_ like those in Privacy Pass either allow
+  require the bot to interact with the Attester for each site it
+  wants to interact with (otherwise linkage is possible).
+* _Camenisch-Lysanskaya credentials_ do not prevent multiple shows
+  to the same server, thus precluding rate limiting.
+* _BBS+_ credentials require the use of pairings and have no obvious
+  transition to post-quantum algorithms.
+
+Note that in cases where the Attester and the Issuer are one and
+the same (see {{server-as-attester}}), it is not necessary to
+convey the attestation to the Issuer and so the generic ZKP
+system can be omitted.
 
 # Issuance Models
 
@@ -362,20 +410,22 @@ Probably the most natural approach is to have one or more independent
 attesters, each of which publishes the policy that it uses to issue
 credentials (e.g., verifying corporate existence, subject pays $100,
 etc.). Sites can then select which attesters have policies they are
-willing to accept. It is also possible to have multiple attesters
+willing to accept. It is also possible to have multiple Attesters
 who conform to a common set of policies, as in the WebPKI, where
 each CA has to meet the same requirements, but site operators
 have the choice of which CA to use.
 
-
 ## Server as Attester
 
-It is also possible for servers to act as their own attester. This is
-not likely to be practical for small sites, as bots will simply
-opt not to authenticate to those sites at all. However, a large
-CDN which hosts many sites might opt to operate its own attester,
-and it could be practical for bots to register with such an
-attester.
+It is also possible for servers to act as their own Attester. This is
+not likely to be practical for small sites, as bots will simply opt
+not to authenticate to those sites at all. However, a large CDN which
+hosts many sites might opt to operate its own Attester, and it could
+be practical for bots to register with such an Attester. Note that
+this approach makes it possible for the Attester to refuse
+service to individual Clients, but not to selectively do so for
+individual customers unless it uses separate Issuers for each
+of those customers.
 
 
 ## Number of Attesters
@@ -392,7 +442,7 @@ covers all of those policies. The least desirable outcome is if
 bots routinely are prompted to provide credentials for a new attester.
 
 
-# Relationship to Existing Technologies
+# Relationship to Browser Authentication
 
 There is significant overlap with existing work on anonymous
 authentication happening in the PrivacyPass WG and in the W3C
@@ -400,14 +450,6 @@ AntiFraud Community Group. While that work is directed towards
 access control for users, the same cryptographic techniques
 can be used to authenticate bots. A good description of
 the vision and requirements can be found at {{PACT-Issue}}.
-There are a number of potential cryptographic techniques
-that can be used to issue anonymous rate-limited credentials
-including Anonymous Credit Tokens (ACT) {{?I-D.schlesinger-cfrg-act}}
-and Anonymous Rate Limited Credentials (ARC) {{?I-D.yun-cfrg-arc}}.
-Katz and Sefranek {{IACR-2025-2080}} have published techniques
-for hiding which attester out of a set of attesters was associated
-with a given credential.
-
 The ideal scenario would be to be able to use compatible tokens
 for users and bots, differing only in the issuance policies,
 the attesters, and the rate limits.
@@ -445,32 +487,20 @@ access:
 >
 >   *  Condition access upon participation in some scheme or protocol
 >      (e.g., payment for access);
-
-As noted by the draft:
-
+>
 >   Note that the first two imply some notion of bots being tied to a
 >   real-world identity, whereas the remaining do not necessarily require
 >   it.
 
-{::comment}
-RLB - I would just say that anonymous credentials are consistent with all of these
-cases.  E.g., if you had an attester / bit in the credential that says "the holder
-of this credential is on the allow list".
-
-RLB - It might be good to call out above (say arch-overview) the general
-approach of shifting semantics from the verifier to the attester.
-{:/comment}
-
-In general, the architecture in this document can potentially used for the
-second two use cases and can be used for some versions of the first two
-use cases. Specifically, because allow and deny lists are enforced at
-the attester, any given allow or deny list needs to be fairly widely
-used--or at least used at a big site--in order to be practical. For
-instance, an attester could have the policy not to issue to any bot which
-was illegal to do business with in a given jurisdiction, because many
-sites might be interested in such a policy, but a policy where a
-site doesn't want to allow access by a direct competitor is more difficult
-to execute.
+ABA can be used for the second two use cases and can be used for some
+versions of the first two use cases. Specifically, because allow and
+deny lists are enforced at the attester, any given allow or deny list
+needs to be fairly widely used--or at least used at a big site--in
+order to be practical. For instance, an attester could have the policy
+not to issue to any bot which was illegal to do business with in a
+given jurisdiction, because many sites might be interested in such a
+policy, but a policy where a site doesn't want to allow access by a
+direct competitor is more difficult to execute.
 
 ## Providing Different Content to Bots
 
