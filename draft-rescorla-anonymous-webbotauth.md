@@ -1,6 +1,6 @@
 ---
 title: "Anonymous Bot Authentication: Authorization and Rate Limiting for Web Agents"
-abbrev: "Anonymous Bot Agents"
+abbrev: "Anonymous Bot Authentication"
 category: info
 
 docname: draft-rescorla-anonymous-webbotauth-latest
@@ -77,7 +77,7 @@ informative:
 Automated agents ("bots") represent a large fraction of the traffic to
 many Web sites. In some cases, this traffic is desired, in others
 undesired, and in yet others, desired as long as it remains within
-certain rate limits. This memo describes Anonymous Bot Agents (ABA), a
+certain rate limits. This memo describes Anonymous Bot Authentication (ABA), a
 system that allows Web site operators to distinguish wanted from
 unwanted traffic, while not tying a given request to a specific
 sender.
@@ -106,8 +106,8 @@ to heavily restrict or block entirely. For example:
 {{?I-D.nottingham-webbotauth-use-cases}} provides a more complete
 list of potential use cases.
 
-The traditional way that websites discriminate between clients is with client
-authentication.  Sites can use behavioral analysis to determine when traffic
+In response to this approach, there have been proposals to authenticate
+automated clients. Sites can use behavioral analysis to determine when traffic
 from a given endpoint appears bot-like (e.g., is high volume, has low latency
 between requests, appears to be retrieving the entire site, etc.) and restrict
 access by those endpoints unless they authenticate and the resulting identity is
@@ -138,7 +138,7 @@ that the bot is part of some set of authorized bots -- say those whose operators
 have agreed to good behavior -- and not the specific identity of the bot or the
 bot operator.
 
-This document describes an architecture for using anonymous credential to
+This document describes an approach for using anonymous credential to
 authenticate bots to websites.  In addition to laying out how the system works,
 we describe the trade-offs between anonymity and fine-grained abuse mitigation.
 
@@ -163,7 +163,9 @@ Request + Attestation ---------------------------->
 {: #fig-architecture-overview title="Architectural Overview" }
 
 Prior to contacting the site, Alice and Bob both register with a
-credential Attester. They each are issued an anonymous credential, which
+credential Attester, which is responsible for evaluating
+whether they comply with the Attester's policies.
+They each are issued an anonymous credential, which
 they can use to authenticate to the server.  What makes the credential
 anonymous is that the site only learns that someone with a credential
 from the Attester is authenticating, not whether it's Alice or Bob. This
@@ -185,17 +187,10 @@ discussed below.
 ## Rate Limiting
 
 In some cases it may be desirable to limit any individual agent to a
-specific number of requests. For example:
-
-* A given attester may have a large number of subscribers but only
-  a few may access a given site. In this case, overall rate limits
-  for an attester will not be effective, but individual rate limits
-  are.
-
-* A given attester may have multiple tiers of subscribers that have
-  undergone different amounts of vetting and therefore should be
-  allowed to offer different amounts of load. Individual rate limits
-  permit this while maintaining a large anonymity set.
+specific number of requests. For example, a given Attester may have a
+large number of subscribers but only a few may access a given site. In
+this case, overall rate limits for an attester will not be effective,
+but individual rate limits are.
 
 {::comment}
 ## Misbehavior Reporting
@@ -207,19 +202,19 @@ TODO
 ## Attester Hiding
 
 Conversely, in some cases, it is desirable to conceal which of a set
-of attesters issued a credential. As a concrete example, the IETF
-PrivacyPass WG is designing anonymous credentials that can be issued to
-individuals indicating that they have passed some set of checks
+of Attesters issued a credential. As a concrete example, the IETF
+PrivacyPass WG is designing anonymous credentials that can be issued
+to individuals indicating that they have passed some set of checks
 indicating that they represent a human. As discussed below, it may be
 possible to use the same type of credential for PrivacyPass and for
-anonymous bot authentication, even if the attesters for those
-credentials are different. A site which accepts both credentials
-for users and bots does not necessarily need to know which type
-of user a given request comes from--as long as there is some
-rate limiting to prevent individual credentials from being used
-for large scale bot activity--in which case it may be desirable
-to instead show that a user has a valid credential from _either_
-the attester for user or the attester for bots without revealing which.
+ABA, even if the Attesters for those credentials are different. A site
+which accepts both credentials for users and bots does not necessarily
+need to know which type of user a given request comes from--as long as
+there is some rate limiting to prevent individual credentials from
+being used for large scale bot activity--in which case it may be
+desirable to instead show that a user has a valid credential from
+_either_ the attester for user or the attester for bots without
+revealing which.
 
 
 # Concrete Implementation With Privacy Pass and ARC
@@ -253,7 +248,7 @@ We make use of the "Joint Origin and Issuer Deployment Model" from
 ~~~
 {: #fig-privacy-pass-model title="Privacy Pass Model (Joint Origin and Issuer)" }
 
-In this model, the client interacts with an Attester, which is
+In this model, the Client interacts with an Attester, which is
 responsible for determining whether the client conforms to the
 required policy. The Attester provides an Attestation which can then
 be presented to the site (the Issuer in the diagram above), which
@@ -290,7 +285,7 @@ an ARC token, as shown in {{fig-aba-with-privacy-pass}}.
 When a new Client is deployed, it first must register with some set
 of Attesters. These Attesters will require the bot to demonstrate
 that it complies with their policies, for instance that it is a
-registered corporation, holds a domain name, an IP address block,
+registered corporation, holds a domain name or an IP address block,
 etc. Once the Attester is satisfied, it issues a Credential to
 the Client in the form of a CWT {{!RFC8392}} signed by the Attester. This
 Credential can be used to authenticate to an arbitrary number of Issuers.
@@ -544,12 +539,12 @@ is possible to make some general observations.
 ## Anonymity Set
 
 The anonymity set for a given transaction is the set of credentials
-associated with a given attester, or, if attester hiding is used, the set
+associated with a given Attester, or, if Attester hiding is used, the set
 of credentials associated with the set of attesters. However, it is
 still possible to learn information about the client by manipulating
 the attester set. For example, a site acting as an attester could use
 different keys for each user or a site could use different attester
-subsets to identify which of a set of attesters was in use.
+subsets to identify which of a set of Attesters was in use.
 Transparency/consistency mechansims like
 {{?I-D.ietf-privacypass-key-consistency}} may be useful in detecting
 this form of attack.
