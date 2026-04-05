@@ -273,14 +273,14 @@ an ARC token, as shown in {{fig-aba-with-privacy-pass}}.
        |                     |        `------|-------------|------'
        |                     |               |             |
        +---- Cred-Request--->|               |             |
-       |<--------JWT---------+               |             |
+       |<--------CWT---------+               |             |
        |                     |               |             |
 
                              [Later]
 
        |<-------------------------------- TokenChallenge --+
        |                     |               |             |
-       +----TokenRequest + ZKP(JWT))-------->|             |
+       +----TokenRequest + ZKP(CWT))-------->|             |
        |<--TokenResponse[ARC(Limit=XXX)]-----+             |
        |                                                   |
        +---------------- Request + ARC Proof-------------->|
@@ -292,7 +292,7 @@ of Attesters. These Attesters will require the bot to demonstrate
 that it complies with their policies, for instance that it is a
 registered corporation, holds a domain name, an IP address block,
 etc. Once the Attester is satisfied, it issues a Credential to
-the Client in the form of a JWT signed by the Attester. This
+the Client in the form of a CWT {{!RFC8392}} signed by the Attester. This
 Credential can be used to authenticate to an arbitrary number of Issuers.
 
 When a client contacts a new site for which it does not yet
@@ -303,7 +303,7 @@ in {{auth-issuer}}, so that the Issuer only learns the following
 information:
 
 1. This Client has been authenticated by the Attester.
-1. This Client has not authenticated to the Attester previously
+1. This Client has not authenticated to the Issuer previously
    using this Credential (potentially within a given time window).
 
 Assuming that the Client's proof verifies correctly and the
@@ -323,9 +323,32 @@ to the Origin repeatedly up to the number of authentications in
 in rate limit associated with the token. These authentications
 are unlinkable provided that the Client does not exceed the rate
 limit; authentications beyond the rate limit are linkable.
+Because any Credential can only be used once for a given
+Issuer within a given time window, the total rate limit for a given Client/Issuer pair
+is bounded by the limit associated with the ARC token.
 
+## Providing Attestation to the Issuer {#auth-issuer}
 
-## Authentication to the Issuer {#auth-issuer}
+The protocol for Attestation to the Issuer is designed to meet
+the following requirements:
+
+* A Credential can be used with an arbitrary number of Issuers.
+* A Credential can only be used once with a single Issuer within
+  a given time window
+* Credential presentations are unlinkable, both between
+  Issuer and Attester and between Issuers.
+
+These requirements can be met by using a signed credential (in this
+case, a CWT {{!RFC8392}}), along with a generic circuit-based
+zero-knowledge proof system (in this case Longfellow-ZK
+{{!I-D.google-cfrg-libzk}}.  The interaction between the Attester and
+the Client just yields an ordinary CWT and then the Client proves in
+zero-knowledge that they have a valid Credential from a given Attester.
+
+In order to prevent replay, the proof also includes an Issuer-specific
+nullifier tied to the Issuer's domain name. While the proof itself
+varies between presentations, the nullifier remains the same and
+therefore can be used to detect replay.
 
 
 # Issuance Models
