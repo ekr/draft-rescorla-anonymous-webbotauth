@@ -143,7 +143,7 @@ authenticate bots to websites.  In addition to laying out how the system works,
 we describe the trade-offs between anonymity and fine-grained abuse mitigation.
 
 
-# Achitectural Overview {#architectural-overview}
+# Architectural Overview {#architectural-overview}
 
 The overall structure of ABA is shown in {{architectural-overview}}.
 
@@ -283,9 +283,9 @@ an ARC token, as shown in {{fig-aba-with-privacy-pass}}.
        +----TokenRequest + ZKP(CWT))-------->|             |
        |<--TokenResponse[ARC(Limit=XXX)]-----+             |
        |                                                   |
-       +---------------- Request + ARC Proof-------------->|
+       +---------------- Request + ARC Token-------------->|
 ~~~
-{: #fig-aba-with-privacy-pass title="ABA with Privacy Pass)" }
+{: #fig-aba-with-privacy-pass title="ABA with Privacy Pass" }
 
 When a new Client is deployed, it first must register with some set
 of Attesters. These Attesters will require the bot to demonstrate
@@ -346,9 +346,9 @@ the Client just yields an ordinary CWT and then the Client proves in
 zero-knowledge that they have a valid Credential from a given Attester.
 
 In order to prevent replay, the proof also includes an Issuer-specific
-nullifier tied to the Issuer's domain name. While the proof itself
-varies between presentations, the nullifier remains the same and
-therefore can be used to detect replay.
+nullifier tied to the Issuer's domain name and the current time
+window. While the proof itself varies between presentations, the
+nullifier remains the same and therefore can be used to detect replay.
 
 Because we are using a generic ZK system it should also be
 possible to use it to conceal the  Attester if desired: for
@@ -356,7 +356,8 @@ example if there are multiple Attesters who follow equivalent
 vetting procedures, then the Issuer does not need to know which
 Attester the Client used; the ZKP can be designed to prove
 that the Client has a Credential from one of a set of Attesters
-within the same equivalence class.
+within the same equivalence class; of course, the Issuer will
+need to use the same rate limit for all such Attesters.
 
 
 ## Alternate Cryptographic Approaches
@@ -430,7 +431,7 @@ of those customers.
 
 ## Number of Attesters
 
-In general, it is desirable to have for bots to be able to acquire
+In general, it is desirable to for bots to be able to acquire
 a relatively small number of credentials and have high confidence that
 those credentials will be compatible with most if not all of the
 sites that the bot wishes to contact. This can be most straightforwardly
@@ -508,7 +509,7 @@ The architecture in this document may be usable to provide different
 content to bots generally than humans depending on the structure of attesters
 (e.g., does a given attester issue to both bots and to humans) and
 whether techniques are used to conceal which attester is in use.
-However, they are not generally useful to provide different ocntent
+However, they are not generally useful to provide different content
 to specific bots.
 
 
