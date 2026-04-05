@@ -4,11 +4,12 @@
 
 Network Working Group                                        E. Rescorla
 Internet-Draft                                               Independent
-Intended status: Informational                             26 March 2026
-Expires: 27 September 2026
+Intended status: Informational                              5 April 2026
+Expires: 7 October 2026
 
 
-        Anonymous Authorization and Rate Limiting for Web Agents
+ Anonymous Bot Authentication: Authorization and Rate Limiting for Web
+                                 Agents
                draft-rescorla-anonymous-webbotauth-latest
 
 Abstract
@@ -16,8 +17,10 @@ Abstract
    Automated agents ("bots") represent a large fraction of the traffic
    to many Web sites.  In some cases, this traffic is desired, in others
    undesired, and in yet others, desired as long as it remains within
-   certain rate limits.  This memo describes an overall architecture for
-   authorizing bot traffic while protecting anonymous access.
+   certain rate limits.  This memo describes Anonymous Bot
+   Authentication (ABA), a system that allows Web site operators to
+   distinguish wanted from unwanted traffic, while not tying a given
+   request to a specific sender.
 
 About This Document
 
@@ -47,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 27 September 2026.
+   This Internet-Draft will expire on 7 October 2026.
 
 Copyright Notice
 
@@ -68,27 +71,32 @@ Table of Contents
    1.  Introduction
    2.  Architectural Overview
      2.1.  Rate Limiting
-     2.2.  Issuer Hiding
-   3.  Issuance Models
-     3.1.  Independent Issuers
-     3.2.  Server as Issuer
-     3.3.  Number of Issuers
-   4.  Relationship to Existing Technologies
-   5.  Use Case Analysis
-     5.1.  Mitigating Volumetric Abuse by Bots
-     5.2.  Controlling Access by Bots
-     5.3.  Providing Different Content to Bots
-     5.4.  Auditing Bot Behavior
-     5.5.  Classifying Traffic
-     5.6.  Authenticating Site Services
-   6.  Conventions and Definitions
-   7.  Security Considerations
-     7.1.  Anonymity Set
-     7.2.  Credential Misuse
-   8.  IANA Considerations
-   9.  References
-     9.1.  Normative References
-     9.2.  Informative References
+     2.2.  Attester Hiding
+   3.  Concrete Implementation With Privacy Pass and ARC
+     3.1.  Providing Attestation to the Issuer
+     3.2.  Alternate Cryptographic Approaches
+       3.2.1.  Only Generic Zero-Knowledge Proofs
+       3.2.2.  Other Attestation Structures
+   4.  Issuance Models
+     4.1.  Independent Attesters
+     4.2.  Server as Attester
+     4.3.  Number of Attesters
+   5.  Relationship to Browser Authentication
+   6.  Use Case Analysis
+     6.1.  Mitigating Volumetric Abuse by Bots
+     6.2.  Controlling Access by Bots
+     6.3.  Providing Different Content to Bots
+     6.4.  Auditing Bot Behavior
+     6.5.  Classifying Traffic
+     6.6.  Authenticating Site Services
+   7.  Conventions and Definitions
+   8.  Security Considerations
+     8.1.  Anonymity Set
+     8.2.  Credential Misuse
+   9.  IANA Considerations
+   10. References
+     10.1.  Normative References
+     10.2.  Informative References
    Acknowledgments
    Author's Address
 
@@ -114,21 +122,21 @@ Table of Contents
    [I-D.nottingham-webbotauth-use-cases] provides a more complete list
    of potential use cases.
 
-   The obvious way to address undesired bot traffic is to require bots
-   to authenticate to the server.  The overall idea here is that sites
-   can use behavioral analysis to determine when traffic from a given
-   endpoint appears bot-like (e.g., is high volume, has low latency
-   between requests, appears to be retrieving the entire site, etc.) and
-   restrict access by those endpoints unless they authenticate and the
-   resulting identity is acceptable to the site.
-   [I-D.meunier-webbotauth-registry] describes one such architecture,
-   where identities are rooted in the DNS and bots use digital
-   signatures to tie their activitity to a given identity.
+   In response to this approach, there have been proposals to
+   authenticate automated clients.  Sites can use behavioral analysis to
+   determine when traffic from a given endpoint appears bot-like (e.g.,
+   is high volume, has low latency between requests, appears to be
+   retrieving the entire site, etc.) and restrict access by those
+   endpoints unless they authenticate and the resulting identity is
+   acceptable to the site.  [I-D.meunier-webbotauth-registry] describes
+   one such architecture, where identities are rooted in the DNS and
+   bots use digital signatures to tie their activitity to a given
+   identity.
 
    While directly identifying each bot allows the site to precisely
-   monitor bots behavior and restrict or block bots that it believes are
-   misbehaving, it also has potential negative effects on the open Web,
-   including:
+   monitor bots' behavior and restrict or block bots that it believes
+   are misbehaving, it also has potential negative effects on the open
+   Web, including:
 
    *  Allowing sites to precisely discriminate against specific bots,
       even when those bots are acting in the public interest.  For
@@ -145,23 +153,29 @@ Table of Contents
    *  Preventing users and groups from being able to anonymously
       retrieve Web content using automated tools.
 
-   This document describes an alternative architecture that allows for
-   anonymous authorization and rate limiting of bots while avoiding
-   directly identifying individual bots, thus making it more difficult
-   for sites to precisely select the list of acceptable bots.
+   In many use cases, it is possible to resolve this tension using
+   anonymous credentials.  When a bot presents an anonymous credential,
+   the Web site learns that the bot is part of some set of authorized
+   bots -- say those whose operators have agreed to good behavior -- and
+   not the specific identity of the bot or the bot operator.
+
+   This document describes an approach for using anonymous credential to
+   authenticate bots to websites.  In addition to laying out how the
+   system works, we describe the trade-offs between anonymity and fine-
+   grained abuse mitigation.
 
 2.  Architectural Overview
 
-   The overall idea, is shown in Figure 1:
+   The overall structure of ABA is shown in Section 2.
 
-   Alice         Bob           Issuer             Site
+   Alice         Bob           Attester             Site
 
    Register --------------------->
-   <------------------ Cred[Alice]
+   <----------- Attestation[Alice]
                  Register ------->
-                   <---- Cred[Bob]
+            <---- Attestation[Bob]
 
-   Request + Cred ----------------------------------->
+   Request + Attestation ---------------------------->
                                 Site only knows Issuer,
                                       not Alice or Bob
    <------------------------------------------Response
@@ -169,13 +183,14 @@ Table of Contents
                       Figure 1: Architectural Overview
 
    Prior to contacting the site, Alice and Bob both register with a
-   credential Issuer.  They each are issued an anonymous credential,
-   which they can use to authenticate to the server.  What makes the
-   credential anonymous is that the site only learns that someone with a
-   credential from the Issuer is authenticating, not whether it's Alice
-   or Bob. This prevents the site from discriminating _between_
-   customers of the same issuer, although it can discriminate between
-   issuers.
+   credential Attester, which is responsible for evaluating whether they
+   comply with the Attester's policies.  They each are issued an
+   anonymous credential, which they can use to authenticate to the
+   server.  What makes the credential anonymous is that the site only
+   learns that someone with a credential from the Attester is
+   authenticating, not whether it's Alice or Bob. This prevents the site
+   from discriminating _between_ customers of the same attester,
+   although it can discriminate between attesters.
 
    As a result, while it is possible to distinguish authenticated from
    unauthenticated bots, it is not possible to use the authentication
@@ -184,101 +199,263 @@ Table of Contents
    possible to identify bots via other mechanisms such as IP address or
    fingerprinting.
 
-   In some cases it may be sufficient merely to identify the issuer, for
-   instance if the issuer performs some vetting to ensure policy
+   In some cases it may be sufficient merely to identify the attester,
+   for instance if the attester performs some vetting to ensure policy
    compliance.  However, in some cases this may be insufficient, as
    discussed below.
 
 2.1.  Rate Limiting
 
    In some cases it may be desirable to limit any individual agent to a
-   specific number of requests.  For example:
+   specific number of requests.  For example, a given Attester may have
+   a large number of subscribers but only a few may access a given site.
+   In this case, overall rate limits for an attester will not be
+   effective, but individual rate limits are.
 
-   *  A given issuer may have a large number of subscribers but only a
-      few may access a given site.  In this case, overall rate limits
-      for an issuer will not be effective, but individual rate limits
-      are.
-
-   *  A given issuer may have multiple tiers of subscribers that have
-      undergone different amounts of vetting and therefore should be
-      allowed to offer different amounts of load.  Individual rate
-      limits permit this while maintaining a large anonymity set.
-
-2.2.  Issuer Hiding
+2.2.  Attester Hiding
 
    Conversely, in some cases, it is desirable to conceal which of a set
-   of issuers issued a credential.  As a concrete example, the IETF
+   of Attesters issued a credential.  As a concrete example, the IETF
    PrivacyPass WG is designing anonymous credentials that can be issued
    to individuals indicating that they have passed some set of checks
    indicating that they represent a human.  As discussed below, it may
    be possible to use the same type of credential for PrivacyPass and
-   for anonymous bot authentication, even if the issuers for those
-   credentials are different.  A site which accepts both credentials for
-   users and bots does not necessarily need to know which type of user a
-   given request comes from--as long as there is some rate limiting to
-   prevent individual credentials from being used for large scale bot
-   activity--in which case it may be desirable to instead show that a
-   user has a valid credential from _either_ the issuer for user or the
-   issuer for bots without revealing which.
+   for ABA, even if the Attesters for those credentials are different.
+   A site which accepts both credentials for users and bots does not
+   necessarily need to know which type of user a given request comes
+   from--as long as there is some rate limiting to prevent individual
+   credentials from being used for large scale bot activity--in which
+   case it may be desirable to instead show that a user has a valid
+   credential from _either_ the attester for user or the attester for
+   bots without revealing which.
 
-3.  Issuance Models
+3.  Concrete Implementation With Privacy Pass and ARC
+
+   This section describes how to implement ABA using Privacy Pass
+   [RFC9576], and Anonymous Rate-Limited Credentials
+   [I-D.yun-privacypass-crypto-arc].  While this is not the only
+   possible implementation approach, it leverages existing deployed and
+   proposed IETF technologies and thus avoids duplicating existing and
+   fits well into existing deployments.
+
+   We make use of the "Joint Origin and Issuer Deployment Model" from
+   Section 4.3 of [RFC9576], reproduced below in Figure 2:
+
+                                        +----------------------------.
+      +--------+          +----------+  |  +--------+     +--------+  |
+      | Client |          | Attester |  |  | Issuer |     | Origin |  |
+      +---+----+          +-----+----+  |  +----+---+     +---+----+  |
+          |                     |        `------|-------------|------'
+          |<-------------------------------- TokenChallenge --+
+          |                     |               |             |
+          |<=== Attestation ===>|               |             |
+          |                     |               |             |
+          +------------ TokenRequest ---------->|             |
+          |<---------- TokenResponse -----------+             |
+          |                                                   |
+          +--------------------- Token ----------------------->
+          |                                                   |
+
+           Figure 2: Privacy Pass Model (Joint Origin and Issuer)
+
+   In this model, the Client interacts with an Attester, which is
+   responsible for determining whether the client conforms to the
+   required policy.  The Attester provides an Attestation which can then
+   be presented to the site (the Issuer in the diagram above), which
+   provides a Token.  The bot can then use the Token to get services
+   from the site (the Origin in the diagram above).  The Issuer and the
+   Origin are operated by the same entity (this is a technical
+   constraint of ARC).
+
+   In ABA, the Attestation is performed with a general zero-knowledge
+   proof system such as [I-D.google-cfrg-libzk] and the Token is an ARC
+   token, as shown in Figure 3. ~~~ +----------------------------.
+   +--------+ +----------+ | +--------+ +--------+ | | Client | |
+   Attester | | | Issuer | | Origin | | +---+----+ +-----+----+ |
+   +----+---+ +---+----+ | | | `------|-------------|------' | | | |
+   +---- Cred-Request--->| | | |<--------CWT---------+ | | | | | |
+
+                            [Later]
+
+      |<-------------------------------- TokenChallenge --+
+      |                     |               |             |
+      +----TokenRequest + ZKP(CWT))-------->|             |
+      |<--TokenResponse[ARC(Limit=XXX)]-----+             |
+      |                                                   |
+      +---------------- Request + ARC Token-------------->| ~~~
+
+                      Figure 3: ABA with Privacy Pass
+
+   When a new Client is deployed, it first must register with some set
+   of Attesters.  These Attesters will require the bot to demonstrate
+   that it complies with their policies, for instance that it is a
+   registered corporation, holds a domain name or an IP address block,
+   etc.  Once the Attester is satisfied, it issues a Credential to the
+   Client in the form of a CWT [RFC8392] signed by the Attester.  This
+   Credential can be used to authenticate to an arbitrary number of
+   Issuers.
+
+   When a client contacts a new site for which it does not yet have an
+   ARC token, the client uses the Credential to authenticate to the
+   Issuer and request an ARC token.  This authentication is performed
+   anonymously using a zero-knowledge proof as described in Section 3.1,
+   so that the Issuer only learns the following information:
+
+   1.  This Client has been authenticated by the Attester.
+
+   2.  This Client has not authenticated to the Issuer previously using
+       this Credential (potentially within a given time window).
+
+   Assuming that the Client's proof verifies correctly and the Attester
+   is acceptable, the Issuer issues an ARC token with a rate limit
+   appropriate for the Attester.  For instance, if the Attester has a
+   policy designed for high traffic bots, the Issuer might use one rate
+   limit, whereas if the policy is designed for low traffic bots, the
+   Issuer might use a lower rate limit.  Note that the choice of rate
+   limit is entirely up to the Issuer, but because all Clients
+   authenticated by a given Attester are within the same anonymity set,
+   it cannot provide different per-Client rate limits to Clients
+   attested to by the same Attester.
+
+   Once the Client has an ARC token, it can use it to authenticate to
+   the Origin repeatedly up to the number of authentications in in rate
+   limit associated with the token.  These authentications are
+   unlinkable provided that the Client does not exceed the rate limit;
+   authentications beyond the rate limit are linkable.  Because any
+   Credential can only be used once for a given Issuer within a given
+   time window, the total rate limit for a given Client/Issuer pair is
+   bounded by the limit associated with the ARC token.
+
+3.1.  Providing Attestation to the Issuer
+
+   The protocol for Attestation to the Issuer is designed to meet the
+   following requirements:
+
+   *  A Credential can be used with an arbitrary number of Issuers.
+
+   *  A Credential can only be used once with a single Issuer within a
+      given time window
+
+   *  Credential presentations are unlinkable, both between Issuer and
+      Attester and between Issuers.
+
+   These requirements can be met by using a signed credential (in this
+   case, a CWT [RFC8392]), along with a generic circuit-based zero-
+   knowledge proof system (in this case Longfellow-ZK
+   [I-D.google-cfrg-libzk].  The interaction between the Attester and
+   the Client just yields an ordinary CWT and then the Client proves in
+   zero-knowledge that they have a valid Credential from a given
+   Attester.
+
+   In order to prevent replay, the proof also includes an Issuer-
+   specific nullifier tied to the Issuer's domain name and the current
+   time window.  While the proof itself varies between presentations,
+   the nullifier remains the same and therefore can be used to detect
+   replay.
+
+   Because we are using a generic ZK system it should also be possible
+   to use it to conceal the Attester if desired: for example if there
+   are multiple Attesters who follow equivalent vetting procedures, then
+   the Issuer does not need to know which Attester the Client used; the
+   ZKP can be designed to prove that the Client has a Credential from
+   one of a set of Attesters within the same equivalence class; of
+   course, the Issuer will need to use the same rate limit for all such
+   Attesters.
+
+3.2.  Alternate Cryptographic Approaches
+
+   This section considers a number of alternate cryptographic approaches
+   and explains the choice of primitives in this section.
+
+3.2.1.  Only Generic Zero-Knowledge Proofs
+
+   In principle, it is possible to omit the use of ARC tokens and
+   instead have the Client authenticate each transaction directly to the
+   Origin.  However, even efficient generic ZKP systems like Longfellow-
+   ZK have far higher computational and bandwidth costs than more
+   limited systems such as the one used in ARC.  Using a generic ZKP
+   system to demonstrate ownership of an attested Credential to the
+   Issuer and then using that single interaction to obtain an ARC token
+   makes it possible to amortize the generic proof over a large number
+   of subsequent interactions.
+
+3.2.2.  Other Attestation Structures
+
+   There are a number of other potential ways to convey attestations to
+   the the Issuer, but each fails to fulfill one of the requirements in
+   Section 3.1.
+
+   *  _Non-anonymous credentials_ allow for linkage of bots at
+      redemption time.
+
+   *  _Single-show credentials_ like those in Privacy Pass either allow
+      require the bot to interact with the Attester for each site it
+      wants to interact with (otherwise linkage is possible).
+
+   *  _Camenisch-Lysanskaya credentials_ do not prevent multiple shows
+      to the same server, thus precluding rate limiting.
+
+   *  _BBS+_ credentials require the use of pairings and have no obvious
+      transition to post-quantum algorithms.
+
+   Note that in cases where the Attester and the Issuer are one and the
+   same (see Section 4.2), it is not necessary to convey the attestation
+   to the Issuer and so the generic ZKP system can be omitted.
+
+4.  Issuance Models
 
    Anonymous credentials are compatible with a variety of issuance
    models, as discussed in this section.
 
-3.1.  Independent Issuers
+4.1.  Independent Attesters
 
    Probably the most natural approach is to have one or more independent
-   issuers, each of which publishes the policy that it uses to issue
+   attesters, each of which publishes the policy that it uses to issue
    credentials (e.g., verifying corporate existence, subject pays $100,
-   etc.).  Sites can then select which issuers have policies they are
-   willing to accept.  It is also possible to have multiple issuers who
-   conform to a common set of policies, as in the WebPKI, where each CA
-   has to meet the same requirements, but site operators have the choice
-   of which CA to use.
+   etc.).  Sites can then select which attesters have policies they are
+   willing to accept.  It is also possible to have multiple Attesters
+   who conform to a common set of policies, as in the WebPKI, where each
+   CA has to meet the same requirements, but site operators have the
+   choice of which CA to use.
 
-3.2.  Server as Issuer
+4.2.  Server as Attester
 
-   It is also possible for servers to act as their own issuer.  This is
-   not likely to be practical for small sites, as bots will simply opt
-   not to authenticate to those sites at all.  However, a large CDN
-   which hosts many sites might opt to operate its own issuer, and it
-   could be practical for bots to register with such an issuer.
+   It is also possible for servers to act as their own Attester.  This
+   is not likely to be practical for small sites, as bots will simply
+   opt not to authenticate to those sites at all.  However, a large CDN
+   which hosts many sites might opt to operate its own Attester, and it
+   could be practical for bots to register with such an Attester.  Note
+   that this approach makes it possible for the Attester to refuse
+   service to individual Clients, but not to selectively do so for
+   individual customers unless it uses separate Issuers for each of
+   those customers.
 
-3.3.  Number of Issuers
+4.3.  Number of Attesters
 
-   In general, it is desirable to have for bots to be able to acquire a
+   In general, it is desirable to for bots to be able to acquire a
    relatively small number of credentials and have high confidence that
    those credentials will be compatible with most if not all of the
    sites that the bot wishes to contact.  This can be most
    straightforwardly accomplished if there is only a small number of
-   issuers, but it can also work if there are a larger number of issuers
-   but sites converge on a relatively small number of policies
-   (expressed as which issuers they support) such that a bot can acquire
-   a set of credentials that covers all of those policies.  The least
-   desirable outcome is if bots routinely are prompted to provide
-   credentials for a new issuer.
+   attesters, but it can also work if there are a larger number of
+   attesters but sites converge on a relatively small number of policies
+   (expressed as which attesters they support) such that a bot can
+   acquire a set of credentials that covers all of those policies.  The
+   least desirable outcome is if bots routinely are prompted to provide
+   credentials for a new attester.
 
-4.  Relationship to Existing Technologies
+5.  Relationship to Browser Authentication
 
    There is significant overlap with existing work on anonymous
    authentication happening in the PrivacyPass WG and in the W3C
    AntiFraud Community Group.  While that work is directed towards
    access control for users, the same cryptographic techniques can be
    used to authenticate bots.  A good description of the vision and
-   requirements can be found at [PACT-Issue].  There are a number of
-   potential cryptographic techniques that can be used to issue
-   anonymous rate-limited credentials including Anonymous Credit Tokens
-   (ACT) [I-D.schlesinger-cfrg-act] and Anonymous Rate Limited
-   Credentials (ARC) [I-D.yun-cfrg-arc].  Katz and Sefranek
-   [IACR-2025-2080] have published techniques for hiding which issuer
-   out of a set of issuers was associated with a given credential.
+   requirements can be found at [PACT-Issue].  The ideal scenario would
+   be to be able to use compatible tokens for users and bots, differing
+   only in the issuance policies, the attesters, and the rate limits.
 
-   The ideal scenario would be to be able to use compatible tokens for
-   users and bots, differing only in the issuance policies, the issuers,
-   and the rate limits.
-
-5.  Use Case Analysis
+6.  Use Case Analysis
 
    [I-D.nottingham-webbotauth-use-cases] describes a set of use cases
    for web bot authentication.  The architecture described in this
@@ -289,14 +466,14 @@ Table of Contents
    individual bots.  The remainder of this section addresses each use
    case individually.
 
-5.1.  Mitigating Volumetric Abuse by Bots
+6.1.  Mitigating Volumetric Abuse by Bots
 
    This document directly addresses the topic of volumetric abuse,
    because bots can be authenticated and authenticated bots can be
    restricted to specific bandwidth limits.  Once a bot has exceeded its
    limit, it can be blocked.
 
-5.2.  Controlling Access by Bots
+6.2.  Controlling Access by Bots
 
    [I-D.nottingham-webbotauth-use-cases] provides the following example
    applications of controlling access:
@@ -311,49 +488,46 @@ Table of Contents
       -  Condition access upon participation in some scheme or protocol
          (e.g., payment for access);
 
-   As noted by the draft:
-
       Note that the first two imply some notion of bots being tied to a
       real-world identity, whereas the remaining do not necessarily
       require it.
 
-   In general, the architecture in this document can potentially used
-   for the second two use cases and can be used for some versions of the
-   first two use cases.  Specifically, because allow and deny lists are
-   enforced at the issuer, any given allow or deny list needs to be
-   fairly widely used--or at least used at a big site--in order to be
-   practical.  For instance, an issuer could have the policy not to
-   issue to any bot which was illegal to do business with in a given
-   jurisdiction, because many sites might be interested in such a
-   policy, but a policy where a site doesn't want to allow access by a
-   direct competitor is more difficult to execute.
+   ABA can be used for the second two use cases and can be used for some
+   versions of the first two use cases.  Specifically, because allow and
+   deny lists are enforced at the attester, any given allow or deny list
+   needs to be fairly widely used--or at least used at a big site--in
+   order to be practical.  For instance, an attester could have the
+   policy not to issue to any bot which was illegal to do business with
+   in a given jurisdiction, because many sites might be interested in
+   such a policy, but a policy where a site doesn't want to allow access
+   by a direct competitor is more difficult to execute.
 
-5.3.  Providing Different Content to Bots
+6.3.  Providing Different Content to Bots
 
    The architecture in this document may be usable to provide different
    content to bots generally than humans depending on the structure of
-   issuers (e.g., does a given issuer issue to both bots and to humans)
-   and whether techniques are used to conceal which issuer is in use.
-   However, they are not generally useful to provide different ocntent
-   to specific bots.
+   attesters (e.g., does a given attester issue to both bots and to
+   humans) and whether techniques are used to conceal which attester is
+   in use.  However, they are not generally useful to provide different
+   content to specific bots.
 
-5.4.  Auditing Bot Behavior
+6.4.  Auditing Bot Behavior
 
    This use case is not addressed by this document.
 
-5.5.  Classifying Traffic
+6.5.  Classifying Traffic
 
    Because this use case does not depend on determining which bot is
    which, but only which traffic is human versus bot, the architecture
    in this document may be able to address this use case, depending on
    the ultimate deployment model, in particular whether bots and humans
-   use different issuers and whether the issuer is concealed.
+   use different attesters and whether the attester is concealed.
 
-5.6.  Authenticating Site Services
+6.6.  Authenticating Site Services
 
    This use case is not addressed by this document.
 
-6.  Conventions and Definitions
+7.  Conventions and Definitions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
@@ -361,26 +535,26 @@ Table of Contents
    BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
 
-7.  Security Considerations
+8.  Security Considerations
 
    The precise security and privacy details of a system of this type
    depend on the cryptographic mechanism being deployed.  However, it is
    possible to make some general observations.
 
-7.1.  Anonymity Set
+8.1.  Anonymity Set
 
    The anonymity set for a given transaction is the set of credentials
-   associated with a given issuer, or, if issuer hiding is used, the set
-   of credentials associated with the set of issuers.  However, it is
-   still possible to learn information about the client by manipulating
-   the issuer set.  For example, a site acting as an issuer could use
-   different keys for each user or a site could use different issuer
-   subsets to identify which of a set of issuers was in use.
-   Transparency/consistency mechansims like
+   associated with a given Attester, or, if Attester hiding is used, the
+   set of credentials associated with the set of attesters.  However, it
+   is still possible to learn information about the client by
+   manipulating the attester set.  For example, a site acting as an
+   attester could use different keys for each user or a site could use
+   different attester subsets to identify which of a set of Attesters
+   was in use.  Transparency/consistency mechansims like
    [I-D.ietf-privacypass-key-consistency] may be useful in detecting
    this form of attack.
 
-7.2.  Credential Misuse
+8.2.  Credential Misuse
 
    Because clients are anonymous, some forms of misuse are harder to
    manage.  For example:
@@ -398,13 +572,27 @@ Table of Contents
    be usable, but the techniques described in this document may not add
    to the server's ability to address these issues.
 
-8.  IANA Considerations
+9.  IANA Considerations
 
    This document has no IANA actions.
 
-9.  References
+10.  References
 
-9.1.  Normative References
+10.1.  Normative References
+
+   [I-D.google-cfrg-libzk]
+              Frigo, M. and A. shelat, "The Longfellow Zero-knowledge
+              Scheme", Work in Progress, Internet-Draft, draft-google-
+              cfrg-libzk-01, 2 September 2025,
+              <https://datatracker.ietf.org/doc/html/draft-google-cfrg-
+              libzk-01>.
+
+   [I-D.yun-privacypass-crypto-arc]
+              Yun, C. and C. A. Wood, "Anonymous Rate-Limited
+              Credentials", Work in Progress, Internet-Draft, draft-yun-
+              privacypass-crypto-arc-00, 20 October 2025,
+              <https://datatracker.ietf.org/doc/html/draft-yun-
+              privacypass-crypto-arc-00>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -415,7 +603,15 @@ Table of Contents
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
 
-9.2.  Informative References
+   [RFC8392]  Jones, M., Wahlstroem, E., Erdtman, S., and H. Tschofenig,
+              "CBOR Web Token (CWT)", RFC 8392, DOI 10.17487/RFC8392,
+              May 2018, <https://www.rfc-editor.org/rfc/rfc8392>.
+
+   [RFC9576]  Davidson, A., Iyengar, J., and C. A. Wood, "The Privacy
+              Pass Architecture", RFC 9576, DOI 10.17487/RFC9576, June
+              2024, <https://www.rfc-editor.org/rfc/rfc9576>.
+
+10.2.  Informative References
 
    [Cloudflare-2025]
               Cloudflare, "Cloudflare 2025 Year in Review", 2025,
@@ -438,23 +634,9 @@ Table of Contents
    [I-D.nottingham-webbotauth-use-cases]
               Nottingham, M., "Use Cases for Authentication of Web
               Bots", Work in Progress, Internet-Draft, draft-nottingham-
-              webbotauth-use-cases-01, 18 January 2026,
+              webbotauth-use-cases-02, 1 April 2026,
               <https://datatracker.ietf.org/doc/html/draft-nottingham-
-              webbotauth-use-cases-01>.
-
-   [I-D.schlesinger-cfrg-act]
-              Schlesinger, S. and J. Katz, "Anonymous Credit Tokens",
-              Work in Progress, Internet-Draft, draft-schlesinger-cfrg-
-              act-01, 13 February 2026,
-              <https://datatracker.ietf.org/doc/html/draft-schlesinger-
-              cfrg-act-01>.
-
-   [I-D.yun-cfrg-arc]
-              Yun, C. and C. A. Wood, "Anonymous Rate-Limited
-              Credentials", Work in Progress, Internet-Draft, draft-yun-
-              cfrg-arc-01, 6 August 2025,
-              <https://datatracker.ietf.org/doc/html/draft-yun-cfrg-arc-
-              01>.
+              webbotauth-use-cases-02>.
 
    [IACR-2025-2080]
               Katz, J. and M. Sefranek, "Issuer Hiding for BBS-Based
