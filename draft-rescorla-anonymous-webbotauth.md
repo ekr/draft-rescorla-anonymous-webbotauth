@@ -257,9 +257,14 @@ the site (the Origin in the diagram above). The Issuer and the Origin
 are operated by the same entity (this is a technical constraint of
 ARC).
 
-In ABA, the Attestation is performed with a general zero-knowledge
-proof system such as {{!I-D.google-cfrg-libzk}} and the Token is
-an ARC token, as shown in {{fig-aba-with-privacy-pass}}.
+In ABA, the Attestation is performed with a combination of a general
+zero-knowledge proof (ZKP) system such as {{!I-D.google-cfrg-libzk}}
+and the Token is an ARC token, as shown in
+{{fig-aba-with-privacy-pass}}. The general ZKP system allows the
+Client to prove an arbitrary predicate about a credential but is
+expensive; ARC allows Issuers to create inexpensive anonymous
+tokens which can be reused up to an arbitrary number of times.
+
 ~~~
                                      +----------------------------.
    +--------+          +----------+  |  +--------+     +--------+  |
