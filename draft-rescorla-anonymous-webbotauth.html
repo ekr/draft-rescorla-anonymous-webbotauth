@@ -1057,7 +1057,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Rescorla</td>
-<td class="center">Expires 7 October 2026</td>
+<td class="center">Expires 8 October 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1070,12 +1070,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-rescorla-anonymous-webbotauth-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-04-05" class="published">5 April 2026</time>
+<time datetime="2026-04-06" class="published">6 April 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-10-07">7 October 2026</time></dd>
+<dd class="expires"><time datetime="2026-10-08">8 October 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1126,7 +1126,7 @@ sender.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 7 October 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 8 October 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1467,10 +1467,17 @@ provides a Token.  The bot can then use the Token to get services from
 the site (the Origin in the diagram above). The Issuer and the Origin
 are operated by the same entity (this is a technical constraint of
 ARC).<a href="#section-3-4" class="pilcrow">¶</a></p>
-<p id="section-3-5">In ABA, the Attestation is performed with a general zero-knowledge
-proof system such as <span>[<a href="#I-D.google-cfrg-libzk" class="cite xref">I-D.google-cfrg-libzk</a>]</span> and the Token is
-an ARC token, as shown in <a href="#fig-aba-with-privacy-pass" class="auto internal xref">Figure 3</a>.
-~~~
+<p id="section-3-5">In ABA, the Attestation is performed with a combination of a general
+zero-knowledge proof (ZKP) system such as <span>[<a href="#I-D.google-cfrg-libzk" class="cite xref">I-D.google-cfrg-libzk</a>]</span>
+and the Token is an ARC token, as shown in
+<a href="#fig-aba-with-privacy-pass" class="auto internal xref">Figure 3</a>. The general ZKP system allows the
+Client to prove an arbitrary predicate about a credential but is
+expensive; ARC allows Issuers to create inexpensive anonymous
+tokens which can be reused up to an arbitrary number of times.<a href="#section-3-5" class="pilcrow">¶</a></p>
+<span id="name-aba-with-privacy-pass"></span><div id="fig-aba-with-privacy-pass">
+<figure id="figure-3">
+        <div class="alignLeft art-text artwork" id="section-3-6.1">
+<pre>
                                      +----------------------------.
    +--------+          +----------+  |  +--------+     +--------+  |
    | Client |          | Attester |  |  | Issuer |     | Origin |  |
@@ -1479,19 +1486,16 @@ an ARC token, as shown in <a href="#fig-aba-with-privacy-pass" class="auto inter
        |                     |               |             |
        +---- Cred-Request---&gt;|               |             |
        |&lt;--------CWT---------+               |             |
-       |                     |               |             |<a href="#section-3-5" class="pilcrow">¶</a></p>
-<span id="name-aba-with-privacy-pass"></span><div id="fig-aba-with-privacy-pass">
-<figure id="figure-3">
-        <div class="alignLeft art-text artwork" id="section-3-6.1">
-<pre>
-                         [Later]
+       |                     |               |             |
 
-   |&lt;-------------------------------- TokenChallenge --+
-   |                     |               |             |
-   +----TokenRequest + ZKP(CWT))--------&gt;|             |
-   |&lt;--TokenResponse[ARC(Limit=XXX)]-----+             |
-   |                                                   |
-   +---------------- Request + ARC Token--------------&gt;| ~~~
+                             [Later]
+
+       |&lt;-------------------------------- TokenChallenge --+
+       |                     |               |             |
+       +----TokenRequest + ZKP(CWT))--------&gt;|             |
+       |&lt;--TokenResponse[ARC(Limit=XXX)]-----+             |
+       |                                                   |
+       +---------------- Request + ARC Token--------------&gt;|
 </pre>
 </div>
 <figcaption><a href="#figure-3" class="selfRef">Figure 3</a>:

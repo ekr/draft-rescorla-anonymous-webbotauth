@@ -4,8 +4,8 @@
 
 Network Working Group                                        E. Rescorla
 Internet-Draft                                               Independent
-Intended status: Informational                              5 April 2026
-Expires: 7 October 2026
+Intended status: Informational                              6 April 2026
+Expires: 8 October 2026
 
 
  Anonymous Bot Authentication: Authorization and Rate Limiting for Web
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 October 2026.
+   This Internet-Draft will expire on 8 October 2026.
 
 Copyright Notice
 
@@ -267,22 +267,32 @@ Table of Contents
    Origin are operated by the same entity (this is a technical
    constraint of ARC).
 
-   In ABA, the Attestation is performed with a general zero-knowledge
-   proof system such as [I-D.google-cfrg-libzk] and the Token is an ARC
-   token, as shown in Figure 3. ~~~ +----------------------------.
-   +--------+ +----------+ | +--------+ +--------+ | | Client | |
-   Attester | | | Issuer | | Origin | | +---+----+ +-----+----+ |
-   +----+---+ +---+----+ | | | `------|-------------|------' | | | |
-   +---- Cred-Request--->| | | |<--------CWT---------+ | | | | | |
+   In ABA, the Attestation is performed with a combination of a general
+   zero-knowledge proof (ZKP) system such as [I-D.google-cfrg-libzk] and
+   the Token is an ARC token, as shown in Figure 3.  The general ZKP
+   system allows the Client to prove an arbitrary predicate about a
+   credential but is expensive; ARC allows Issuers to create inexpensive
+   anonymous tokens which can be reused up to an arbitrary number of
+   times.
 
-                            [Later]
+                                        +----------------------------.
+      +--------+          +----------+  |  +--------+     +--------+  |
+      | Client |          | Attester |  |  | Issuer |     | Origin |  |
+      +---+----+          +-----+----+  |  +----+---+     +---+----+  |
+          |                     |        `------|-------------|------'
+          |                     |               |             |
+          +---- Cred-Request--->|               |             |
+          |<--------CWT---------+               |             |
+          |                     |               |             |
 
-      |<-------------------------------- TokenChallenge --+
-      |                     |               |             |
-      +----TokenRequest + ZKP(CWT))-------->|             |
-      |<--TokenResponse[ARC(Limit=XXX)]-----+             |
-      |                                                   |
-      +---------------- Request + ARC Token-------------->| ~~~
+                                [Later]
+
+          |<-------------------------------- TokenChallenge --+
+          |                     |               |             |
+          +----TokenRequest + ZKP(CWT))-------->|             |
+          |<--TokenResponse[ARC(Limit=XXX)]-----+             |
+          |                                                   |
+          +---------------- Request + ARC Token-------------->|
 
                       Figure 3: ABA with Privacy Pass
 
