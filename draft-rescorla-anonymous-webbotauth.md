@@ -470,14 +470,16 @@ negative impact of bots while avoiding making it trivial for
 sites to discriminate against individual bots. The remainder
 of this section addresses each use case individually.
 
-## Mitigating Volumetric Abuse by Bots
+## Site Use Cases
+
+### Mitigating Volumetric Abuse by Bots
 
 This document directly addresses the topic of volumetric abuse,
 because bots can be authenticated and authenticated bots can be
 restricted to specific bandwidth limits. Once a bot has exceeded
 its limit, it can be blocked.
 
-## Controlling Access by Bots
+### Controlling Access by Bots
 
 {{I-D.nottingham-webbotauth-use-cases}}
 provides the following example applications of controlling
@@ -502,12 +504,12 @@ versions of the first two use cases. Specifically, because allow and
 deny lists are enforced at the attester, any given allow or deny list
 needs to be fairly widely used--or at least used at a big site--in
 order to be practical. For instance, an attester could have the policy
-not to issue to any bot which was illegal to do business with in a
+ {not to issue to any bot which was illegal to do business with in a
 given jurisdiction, because many sites might be interested in such a
 policy, but a policy where a site doesn't want to allow access by a
 direct competitor is more difficult to execute.
 
-## Providing Different Content to Bots
+### Providing Different Content to Bots
 
 The architecture in this document may be usable to provide different
 content to bots generally than humans depending on the structure of attesters
@@ -517,11 +519,11 @@ However, they are not generally useful to provide different content
 to specific bots.
 
 
-## Auditing Bot Behavior
+### Auditing Bot Behavior
 
 This use case is not addressed by this document.
 
-## Classifying Traffic
+### Classifying Traffic
 
 Because this use case does not depend on determining which bot is which,
 but only which traffic is human versus bot, the architecture in this
@@ -529,10 +531,39 @@ document may be able to address this use case, depending on the
 ultimate deployment model, in particular whether bots and humans
 use different attesters and whether the attester is concealed.
 
-## Authenticating Site Services
+### Authenticating Site Services
 
 This use case is not addressed by this document.
 
+## Bot Use Cases
+
+### IP Address Mobility
+
+ABA provides authentication for bots independent of IP address.
+Because ABA authentication is at the Attester rather than the Client
+level, it is not possible to use ABA to build bot-specific reputations
+based on observed bot activity; instead the Attester is responsible
+for assessing bots and then providing that information to sites.
+
+### Sharing IP Addresses
+
+Because ABA provides authentication independent of IP address, it
+allows sites to discriminate between unauthenticated users of
+an IP address and those which are ABA-authenticated, thus reducing
+the negative reputational side effects of misuse by unauthenticated
+users sharing the same IP address.
+
+### Robots.txt Alignment
+
+This use case is not addressed by this document.
+
+### Conveying Contextual Information
+
+Because different Attesters can have different policies and Attesters
+can have multiple policies, ABA allows for limited conveyance of
+contextual information. While in principle this information can
+be arbitrarily fine-grained, coarse-grained information ensures
+a larger anonymity set (see {{number-of-attesters}}).
 
 # Conventions and Definitions
 
@@ -551,8 +582,8 @@ The anonymity set for a given transaction is the set of credentials
 associated with a given Attester, or, if Attester hiding is used, the set
 of credentials associated with the set of attesters. However, it is
 still possible to learn information about the client by manipulating
-the attester set. For example, a site acting as an attester could use
-different keys for each user or a site could use different attester
+the attester set. For example, a site acting as an Attester could use
+different keys for each user or a site could use different Attester
 subsets to identify which of a set of Attesters was in use.
 Transparency/consistency mechansims like
 {{?I-D.ietf-privacypass-key-consistency}} may be useful in detecting
