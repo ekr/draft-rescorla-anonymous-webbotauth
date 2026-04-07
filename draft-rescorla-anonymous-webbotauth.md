@@ -305,8 +305,8 @@ information:
 Assuming that the Client's proof verifies correctly and the
 Attester is acceptable, the Issuer issues an ARC credential.
 
-Each credential is associated with an Attester-specific rate
-limit. For instance, if the Attester has a policy designed for high
+Each credential is associated with a rate limit, which may
+be Attester-dependent. For instance, if the Attester has a policy designed for high
 traffic bots, the Issuer might use one rate limit, whereas if the
 policy is designed for low traffic bots, the Issuer might use a lower
 rate limit. Note that the choice of rate limit is entirely up to the
@@ -494,14 +494,10 @@ access:
 >   it.
 
 ABA can be used for the second two use cases and can be used for some
-versions of the first two use cases. Specifically, because allow and
-deny lists are enforced at the attester, any given allow or deny list
-needs to be fairly widely used--or at least used at a big site--in
-order to be practical. For instance, an attester could have the policy
-not to issue to any bot which was illegal to do business with in a
-given jurisdiction, because many sites might be interested in such a
-policy, but a policy where a site doesn't want to allow access by a
-direct competitor is more difficult to execute.
+versions of the first two use cases. However, the more fine-grained
+controls are used (e.g., by having many Attesters with different
+policies) the worse the privacy and scalability properties of the
+system become.n
 
 ### Providing Different Content to Bots
 
@@ -567,7 +563,7 @@ a larger anonymity set (see {{number-of-attesters}}).
 # Security Considerations
 
 The precise security and privacy details of a system of this type
-depend on the cryptographic mechanism being deployed. However, it
+depend on the detailed cryptographic mechanism being deployed. However, it
 is possible to make some general observations.
 
 ## Anonymity Set
@@ -576,7 +572,7 @@ The anonymity set for a given transaction is the set of credentials
 associated with a given Attester, or, if Attester hiding is used, the set
 of credentials associated with the set of attesters. However, it is
 still possible to learn information about the client by manipulating
-the attester set. For example, a site acting as an Attester could use
+the Attester set. For example, a site acting as an Attester could use
 different keys for each user or a site could use different Attester
 subsets to identify which of a set of Attesters was in use.
 Transparency/consistency mechanisms like
