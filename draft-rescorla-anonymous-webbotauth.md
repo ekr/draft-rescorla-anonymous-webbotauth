@@ -176,6 +176,29 @@ instance if the attester performs some vetting to ensure policy
 compliance. However, in some cases this may be insufficient, as
 discussed below.
 
+## Trade-offs
+
+Assuring the anonymity of bot requests means imposes some limits on how this
+authentication mechanism can be used to counter abuse.  These trade-offs are
+discussed in detail in {{#use-case-analysis}}, and the below bullets provide a
+summary:
+
+* ABA supports:
+    * Rate-limiting of requests by a a single bot
+    * Providing separate content to bots vs. humans
+    * Conditioning access based on a bot meeting certain criteria
+    * Conditioning access based on participation in some scheme or protocol
+    * Classifying human vs. bot traffic
+    * IP address mobility and sharing of IP addresses
+    * Unlinkability between authenticated requests by the same client
+* ABA does not support:
+    * Allow lists / deny lists
+    * Auditing bot behavior
+    * Authenticating site services
+
+Essentially, abuse controls that rely on knowing the identity of the abusive
+party are incompatible with anonymous authentication.
+
 ## Rate Limiting
 
 In some cases it may be desirable to limit any individual agent to a
@@ -210,6 +233,7 @@ _either_ the attester for user or the attester for bots without
 revealing which.
 
 {:/comment}
+
 # Concrete Implementation With Privacy Pass and ARC
 
 This section describes how to implement ABA using Privacy Pass {{!RFC9576}}, and
@@ -250,15 +274,13 @@ the site (the Origin in the diagram above). The Issuer and the Origin
 are operated by the same entity (this is a technical constraint of
 ARC).
 
-In ABA, the Attestation is performed with a combination of a general
-zero-knowledge proof (ZKP) system such as {{!I-D.google-cfrg-libzk}}
-and the Token is generated using ARC, as described in
-{{Section 8.1 of I-D.ietf-privacypass-arc-protocol}}.
-The general ZKP system allows the
-Client to prove an arbitrary predicate about a credential but is
-expensive; ARC allows Issuers to create inexpensive anonymous
-tokens which can be reused up to an arbitrary number of times.
-{{fig-aba-with-privacy-pass}} provides more detail
+ABA extends this scheme with a zero-knowledge proof (ZKP) system (e.g.,
+{{!I-D.google-cfrg-libzk}}) in order to assure that the Attester's attestation
+does not leak information to the Issuer that could deanonymize the Client.  This
+property is especially important in the "server as attester" case
+{{#server-as-attester}}, and is not assured by ARC itself.  In effect, ABA uses
+an expensive attestion and ZKP operation to authorize the issuance of ARC tokens
+that can be used cheaply on every request.
 
 ~~~
                                      +----------------------------.
@@ -289,6 +311,8 @@ registered corporation, holds a domain name or an IP address block,
 etc. Once the Attester is satisfied, it issues a Credential to
 the Client in the form of a CWT {{!RFC8392}} signed by the Attester. This
 Credential can be used to authenticate to an arbitrary number of Issuers.
+
+[ RLB: Assuming that in the below, Credential -> Attestation ]
 
 When a client contacts a new site for which it does not yet
 have an ARC Credential, client uses the Credential to authenticate
@@ -405,18 +429,19 @@ models, as discussed in this section.
 
 ## Independent Attesters
 
-Probably the most natural approach is to have one or more independent
-attesters, each of which publishes the policy that it uses to issue
-credentials (e.g., verifying corporate existence, subject pays $100,
-etc.). Sites can then select which attesters have policies they are
-willing to accept. It is also possible to have multiple Attesters
-who conform to a common set of policies, as in the WebPKI, where
-each CA has to meet the same requirements, but site operators
-have the choice of which CA to use.
+Much like millions of websites rely on a much smaller number of independent
+WebPKI certificate authorities, it is possible to have a system of independent
+Attesters that are broadly relied upon by many websites.  Each attester could
+publish the policy that it uses to issue credentials (e.g., verifying corporate
+existence, subject pays $100, etc.). Sites can then select which attesters have
+policies they are willing to accept. It is also possible to have multiple
+Attesters who conform to a common set of policies, as in the WebPKI, where each
+CA has to meet the same requirements, but site operators have the choice of
+which CA to use.
 
 ## Server as Attester
 
-It is also possible for servers to act as their own Attester. This is
+It is also possible for a server to act as their own Attester. This is
 not likely to be practical for small sites, as bots will simply opt
 not to authenticate to those sites at all. However, a large CDN which
 hosts many sites might opt to operate its own Attester, and it could
@@ -426,6 +451,8 @@ service to individual Clients, but not to selectively do so for
 individual customers unless it uses separate Issuers for each
 of those customers.
 
+The ZKP element of ABA ensures that clients remain anonymous even in this case,
+since the client's redemption of an Attestation is not linkable to its issuance.
 
 ## Number of Attesters
 
@@ -439,7 +466,6 @@ on a relatively small number of policies (expressed as which attesters
 they support) such that a bot can acquire a set of credentials that
 covers all of those policies. The least desirable outcome is if
 bots routinely are prompted to provide credentials for a new attester.
-
 
 # Relationship to Browser Authentication
 
@@ -520,6 +546,10 @@ but only which traffic is human versus bot, the architecture in this
 document may be able to address this use case, depending on the
 ultimate deployment model, in particular whether bots and humans
 use different attesters and whether the attester is concealed.
+
+[ RLB: The attester concealment section is commented out above.  Most of the
+text assumes the attester is visible, so I would suggest we delete text related
+to concealment. ]
 
 ### Authenticating Site Services
 
