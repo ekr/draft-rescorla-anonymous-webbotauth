@@ -71,45 +71,44 @@ Table of Contents
    1.  Introduction
    2.  Architectural Overview
      2.1.  Rate Limiting
-     2.2.  Attester Hiding
-   3.  Concrete Implementation With Privacy Pass and ARC
-     3.1.  Providing Attestation to the Issuer
-     3.2.  Alternate Cryptographic Approaches
-       3.2.1.  Only Generic Zero-Knowledge Proofs
-       3.2.2.  Other Attestation Structures
-   4.  Issuance Models
-     4.1.  Independent Attesters
-     4.2.  Server as Attester
-     4.3.  Number of Attesters
-   5.  Relationship to Browser Authentication
-   6.  Use Case Analysis
-     6.1.  Site Use Cases
-       6.1.1.  Mitigating Volumetric Abuse by Bots
-       6.1.2.  Controlling Access by Bots
-       6.1.3.  Providing Different Content to Bots
-       6.1.4.  Auditing Bot Behavior
-       6.1.5.  Classifying Traffic
-       6.1.6.  Authenticating Site Services
-     6.2.  Bot Use Cases
-       6.2.1.  IP Address Mobility
-       6.2.2.  Sharing IP Addresses
-       6.2.3.  Robots.txt Alignment
-       6.2.4.  Conveying Contextual Information
-   7.  Conventions and Definitions
-   8.  Security Considerations
-     8.1.  Anonymity Set
-     8.2.  Credential Misuse
-   9.  IANA Considerations
-   10. References
-     10.1.  Normative References
-     10.2.  Informative References
+     2.2.  Providing Attestation to the Issuer
+     2.3.  Alternate Cryptographic Approaches
+       2.3.1.  Only Generic Zero-Knowledge Proofs
+       2.3.2.  Other Attestation Structures
+   3.  Issuance Models
+     3.1.  Independent Attesters
+     3.2.  Server as Attester
+     3.3.  Number of Attesters
+   4.  Relationship to Browser Authentication
+   5.  Use Case Analysis
+     5.1.  Site Use Cases
+       5.1.1.  Mitigating Volumetric Abuse by Bots
+       5.1.2.  Controlling Access by Bots
+       5.1.3.  Providing Different Content to Bots
+       5.1.4.  Auditing Bot Behavior
+       5.1.5.  Classifying Traffic
+       5.1.6.  Authenticating Site Services
+     5.2.  Bot Use Cases
+       5.2.1.  IP Address Mobility
+       5.2.2.  Sharing IP Addresses
+       5.2.3.  Robots.txt Alignment
+       5.2.4.  Conveying Contextual Information
+   6.  Conventions and Definitions
+   7.  Security Considerations
+     7.1.  Anonymity Set
+     7.2.  Credential Misuse
+   8.  IANA Considerations
+   9.  References
+     9.1.  Normative References
+     9.2.  Informative References
    Acknowledgments
    Author's Address
 
 1.  Introduction
 
    DISCLAIMER: This is a work-in-progress draft and has not yet seen
-   significant security analysis.
+   significant security analysis.  It is being published at an early
+   stage for discussion purposes.
 
    Automated agents ("bots") represent a large fraction of the traffic
    to many Web sites.  For example, Wikimedia reports that about 35% of
@@ -221,28 +220,12 @@ Table of Contents
    In this case, overall rate limits for an attester will not be
    effective, but individual rate limits are.
 
-2.2.  Attester Hiding
-
-   Conversely, in some cases, it is desirable to conceal which of a set
-   of Attesters issued a credential.  As a concrete example, the IETF
-   PrivacyPass WG is designing anonymous credentials that can be issued
-   to individuals indicating that they have passed some set of checks
-   indicating that they represent a human.  As discussed below, it may
-   be possible to use the same type of credential for PrivacyPass and
-   for ABA, even if the Attesters for those credentials are different.
-   A site which accepts both credentials for users and bots does not
-   necessarily need to know which type of user a given request comes
-   from--as long as there is some rate limiting to prevent individual
-   credentials from being used for large scale bot activity--in which
-   case it may be desirable to instead show that a user has a valid
-   credential from _either_ the attester for user or the attester for
-   bots without revealing which.
-
-3.  Concrete Implementation With Privacy Pass and ARC
+   # Concrete Implementation With Privacy Pass and ARC
 
    This section describes how to implement ABA using Privacy Pass
    [RFC9576], and Anonymous Rate-Limited Credentials
-   [I-D.yun-privacypass-crypto-arc].  While this is not the only
+   [I-D.ietf-privacypass-arc-protocol]
+   [I-D.ietf-privacypass-arc-crypto].  While this is not the only
    possible implementation approach, it leverages existing deployed and
    proposed IETF technologies and thus avoids duplicated functionality
    and fits well into existing deployments.
@@ -278,11 +261,12 @@ Table of Contents
 
    In ABA, the Attestation is performed with a combination of a general
    zero-knowledge proof (ZKP) system such as [I-D.google-cfrg-libzk] and
-   the Token is an ARC token, as shown in Figure 3.  The general ZKP
-   system allows the Client to prove an arbitrary predicate about a
-   credential but is expensive; ARC allows Issuers to create inexpensive
-   anonymous tokens which can be reused up to an arbitrary number of
-   times.
+   the Token is generated using ARC, as described in Section 8.1 of
+   [I-D.ietf-privacypass-arc-protocol].  The general ZKP system allows
+   the Client to prove an arbitrary predicate about a credential but is
+   expensive; ARC allows Issuers to create inexpensive anonymous tokens
+   which can be reused up to an arbitrary number of times.  Figure 3
+   provides more detail
 
                                         +----------------------------.
       +--------+          +----------+  |  +--------+     +--------+  |
@@ -291,17 +275,17 @@ Table of Contents
           |                     |        `------|-------------|------'
           |                     |               |             |
           +---- Cred-Request--->|               |             |
-          |<--------CWT---------+               |             |
+          |<----Credential------+               |             |
           |                     |               |             |
 
                                 [Later]
 
           |<-------------------------------- TokenChallenge --+
           |                     |               |             |
-          +----TokenRequest + ZKP(CWT))-------->|             |
-          |<--TokenResponse[ARC(Limit=XXX)]-----+             |
+          +----TokenRequest + ZKP(Credential)-->|             |
+          |<--TokenResponse[ARC Credential]-----+             |
           |                                                   |
-          +---------------- Request + ARC Token-------------->|
+          +---------------- Request + ARC Credential -------->|
 
                       Figure 3: ABA with Privacy Pass
 
@@ -315,10 +299,12 @@ Table of Contents
    Issuers.
 
    When a client contacts a new site for which it does not yet have an
-   ARC token, the client uses the Credential to authenticate to the
-   Issuer and request an ARC token.  This authentication is performed
-   anonymously using a zero-knowledge proof as described in Section 3.1,
-   so that the Issuer only learns the following information:
+   ARC Credential, client uses the Credential to authenticate to the
+   Issuer and request an ARC Credential.  This authentication is
+   performed anonymously using a zero-knowledge proof that it has a
+   valid Credential (shown as "ZKP(Credential)" above), as described in
+   Section 2.2, so that the Issuer only learns the following
+   information:
 
    1.  This Client has been authenticated by the Attester.
 
@@ -326,26 +312,29 @@ Table of Contents
        this Credential (potentially within a given time window).
 
    Assuming that the Client's proof verifies correctly and the Attester
-   is acceptable, the Issuer issues an ARC token with a rate limit
-   appropriate for the Attester.  For instance, if the Attester has a
-   policy designed for high traffic bots, the Issuer might use one rate
-   limit, whereas if the policy is designed for low traffic bots, the
-   Issuer might use a lower rate limit.  Note that the choice of rate
-   limit is entirely up to the Issuer, but because all Clients
-   authenticated by a given Attester are within the same anonymity set,
-   it cannot provide different per-Client rate limits to Clients
-   attested to by the same Attester.
+   is acceptable, the Issuer issues an ARC credential.
 
-   Once the Client has an ARC token, it can use it to authenticate to
-   the Origin repeatedly up to the number of authentications in the rate
-   limit associated with the token.  These authentications are
+   Each credential is associated with an Attester-specific rate limit.
+   For instance, if the Attester has a policy designed for high traffic
+   bots, the Issuer might use one rate limit, whereas if the policy is
+   designed for low traffic bots, the Issuer might use a lower rate
+   limit.  Note that the choice of rate limit is entirely up to the
+   Issuer, but because all Clients authenticated by a given Attester are
+   within the same anonymity set, it cannot use different per-Client
+   rate limits to multiple Clients attested to by the same Attester.
+   Similarly, because all clients whose credentials are associated with
+   the Issuer's key pair, all authorizations by Clients using the
+
+   Once the Client has an ARC credential it can use it to authenticate
+   to the Origin repeatedly up to the number of authentications in the
+   rate limit associated with the Credential.  These authentications are
    unlinkable provided that the Client does not exceed the rate limit;
    authentications beyond the rate limit are linkable.  Because any
    Credential can only be used once for a given Issuer within a given
    time window, the total rate limit for a given Client/Issuer pair is
-   bounded by the limit associated with the ARC token.
+   bounded by the limit associated with the ARC credential.
 
-3.1.  Providing Attestation to the Issuer
+2.2.  Providing Attestation to the Issuer
 
    The protocol for Attestation to the Issuer is designed to meet the
    following requirements:
@@ -381,28 +370,28 @@ Table of Contents
    course, the Issuer will need to use the same rate limit for all such
    Attesters.
 
-3.2.  Alternate Cryptographic Approaches
+2.3.  Alternate Cryptographic Approaches
 
    This section considers a number of alternate cryptographic approaches
    and explains the choice of primitives in this section.
 
-3.2.1.  Only Generic Zero-Knowledge Proofs
+2.3.1.  Only Generic Zero-Knowledge Proofs
 
-   In principle, it is possible to omit the use of ARC tokens and
-   instead have the Client authenticate each transaction directly to the
-   Origin.  However, even efficient generic ZKP systems like Longfellow-
-   ZK have far higher computational and bandwidth costs than more
-   limited systems such as the one used in ARC.  Using a generic ZKP
-   system to demonstrate ownership of an attested Credential to the
-   Issuer and then using that single interaction to obtain an ARC token
-   makes it possible to amortize the generic proof over a large number
-   of subsequent interactions.
+   In principle, it is possible to omit the use of ARC and instead have
+   the Client authenticate each transaction directly to the Origin.
+   However, even efficient generic ZKP systems like Longfellow-ZK have
+   far higher computational and bandwidth costs than more limited
+   systems such as the one used in ARC.  Using a generic ZKP system to
+   demonstrate ownership of an attested Credential to the Issuer and
+   then using that single interaction to obtain an ARC credential makes
+   it possible to amortize the generic proof over a large number of
+   subsequent interactions.
 
-3.2.2.  Other Attestation Structures
+2.3.2.  Other Attestation Structures
 
    There are a number of other potential ways to convey attestations to
    the Issuer, but each fails to fulfill one of the requirements in
-   Section 3.1.
+   Section 2.2.
 
    *  _Non-anonymous credentials_ allow for linkage of bots at
       redemption time.
@@ -418,15 +407,15 @@ Table of Contents
       transition to post-quantum algorithms.
 
    Note that in cases where the Attester and the Issuer are one and the
-   same (see Section 4.2), it is not necessary to convey the attestation
+   same (see Section 3.2), it is not necessary to convey the attestation
    to the Issuer and so the generic ZKP system can be omitted.
 
-4.  Issuance Models
+3.  Issuance Models
 
    Anonymous credentials are compatible with a variety of issuance
    models, as discussed in this section.
 
-4.1.  Independent Attesters
+3.1.  Independent Attesters
 
    Probably the most natural approach is to have one or more independent
    attesters, each of which publishes the policy that it uses to issue
@@ -437,7 +426,7 @@ Table of Contents
    CA has to meet the same requirements, but site operators have the
    choice of which CA to use.
 
-4.2.  Server as Attester
+3.2.  Server as Attester
 
    It is also possible for servers to act as their own Attester.  This
    is not likely to be practical for small sites, as bots will simply
@@ -449,7 +438,7 @@ Table of Contents
    individual customers unless it uses separate Issuers for each of
    those customers.
 
-4.3.  Number of Attesters
+3.3.  Number of Attesters
 
    In general, it is desirable for bots to be able to acquire a
    relatively small number of credentials and have high confidence that
@@ -463,7 +452,7 @@ Table of Contents
    least desirable outcome is if bots routinely are prompted to provide
    credentials for a new attester.
 
-5.  Relationship to Browser Authentication
+4.  Relationship to Browser Authentication
 
    There is significant overlap with existing work on anonymous
    authentication happening in the PrivacyPass WG and in the W3C
@@ -474,7 +463,7 @@ Table of Contents
    be to be able to use compatible tokens for users and bots, differing
    only in the issuance policies, the attesters, and the rate limits.
 
-6.  Use Case Analysis
+5.  Use Case Analysis
 
    [I-D.nottingham-webbotauth-use-cases] describes a set of use cases
    for web bot authentication.  The architecture described in this
@@ -485,16 +474,16 @@ Table of Contents
    individual bots.  The remainder of this section addresses each use
    case individually.
 
-6.1.  Site Use Cases
+5.1.  Site Use Cases
 
-6.1.1.  Mitigating Volumetric Abuse by Bots
+5.1.1.  Mitigating Volumetric Abuse by Bots
 
    This document directly addresses the topic of volumetric abuse,
    because bots can be authenticated and authenticated bots can be
    restricted to specific bandwidth limits.  Once a bot has exceeded its
    limit, it can be blocked.
 
-6.1.2.  Controlling Access by Bots
+5.1.2.  Controlling Access by Bots
 
    [I-D.nottingham-webbotauth-use-cases] provides the following example
    applications of controlling access:
@@ -523,7 +512,7 @@ Table of Contents
    such a policy, but a policy where a site doesn't want to allow access
    by a direct competitor is more difficult to execute.
 
-6.1.3.  Providing Different Content to Bots
+5.1.3.  Providing Different Content to Bots
 
    The architecture in this document may be usable to provide different
    content to bots generally than humans depending on the structure of
@@ -532,11 +521,11 @@ Table of Contents
    in use.  However, they are not generally useful to provide different
    content to specific bots.
 
-6.1.4.  Auditing Bot Behavior
+5.1.4.  Auditing Bot Behavior
 
    This use case is not addressed by this document.
 
-6.1.5.  Classifying Traffic
+5.1.5.  Classifying Traffic
 
    Because this use case does not depend on determining which bot is
    which, but only which traffic is human versus bot, the architecture
@@ -544,13 +533,13 @@ Table of Contents
    the ultimate deployment model, in particular whether bots and humans
    use different attesters and whether the attester is concealed.
 
-6.1.6.  Authenticating Site Services
+5.1.6.  Authenticating Site Services
 
    This use case is not addressed by this document.
 
-6.2.  Bot Use Cases
+5.2.  Bot Use Cases
 
-6.2.1.  IP Address Mobility
+5.2.1.  IP Address Mobility
 
    ABA provides authentication for bots independent of IP address.
    Because ABA authentication is at the Attester rather than the Client
@@ -559,7 +548,7 @@ Table of Contents
    responsible for assessing bots and then providing that information to
    sites.
 
-6.2.2.  Sharing IP Addresses
+5.2.2.  Sharing IP Addresses
 
    Because ABA provides authentication independent of IP address, it
    allows sites to discriminate between unauthenticated users of an IP
@@ -567,19 +556,19 @@ Table of Contents
    negative reputational side effects of misuse by unauthenticated users
    sharing the same IP address.
 
-6.2.3.  Robots.txt Alignment
+5.2.3.  Robots.txt Alignment
 
    This use case is not addressed by this document.
 
-6.2.4.  Conveying Contextual Information
+5.2.4.  Conveying Contextual Information
 
    Because different Attesters can have different policies and Attesters
    can have multiple policies, ABA allows for limited conveyance of
    contextual information.  While in principle this information can be
    arbitrarily fine-grained, coarse-grained information ensures a larger
-   anonymity set (see Section 4.3).
+   anonymity set (see Section 3.3).
 
-7.  Conventions and Definitions
+6.  Conventions and Definitions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
@@ -587,13 +576,13 @@ Table of Contents
    BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
 
-8.  Security Considerations
+7.  Security Considerations
 
    The precise security and privacy details of a system of this type
    depend on the cryptographic mechanism being deployed.  However, it is
    possible to make some general observations.
 
-8.1.  Anonymity Set
+7.1.  Anonymity Set
 
    The anonymity set for a given transaction is the set of credentials
    associated with a given Attester, or, if Attester hiding is used, the
@@ -606,7 +595,7 @@ Table of Contents
    [I-D.ietf-privacypass-key-consistency] may be useful in detecting
    this form of attack.
 
-8.2.  Credential Misuse
+7.2.  Credential Misuse
 
    Because clients are anonymous, some forms of misuse are harder to
    manage.  For example:
@@ -624,13 +613,13 @@ Table of Contents
    be usable, but the techniques described in this document may not add
    to the server's ability to address these issues.
 
-9.  IANA Considerations
+8.  IANA Considerations
 
    This document has no IANA actions.
 
-10.  References
+9.  References
 
-10.1.  Normative References
+9.1.  Normative References
 
    [I-D.google-cfrg-libzk]
               Frigo, M. and A. shelat, "The Longfellow Zero-knowledge
@@ -639,12 +628,20 @@ Table of Contents
               <https://datatracker.ietf.org/doc/html/draft-google-cfrg-
               libzk-01>.
 
-   [I-D.yun-privacypass-crypto-arc]
-              Yun, C. and C. A. Wood, "Anonymous Rate-Limited
-              Credentials", Work in Progress, Internet-Draft, draft-yun-
-              privacypass-crypto-arc-00, 20 October 2025,
-              <https://datatracker.ietf.org/doc/html/draft-yun-
-              privacypass-crypto-arc-00>.
+   [I-D.ietf-privacypass-arc-crypto]
+              Yun, C., Wood, C. A., and A. F. Faz-Hernandez, "Anonymous
+              Rate-Limited Credentials Cryptography", Work in Progress,
+              Internet-Draft, draft-ietf-privacypass-arc-crypto-01, 2
+              March 2026, <https://datatracker.ietf.org/doc/html/draft-
+              ietf-privacypass-arc-crypto-01>.
+
+   [I-D.ietf-privacypass-arc-protocol]
+              Yun, C., Wood, C. A., and A. F. Faz-Hernandez, "Privacy
+              Pass Issuance Protocol for Anonymous Rate-Limited
+              Credentials", Work in Progress, Internet-Draft, draft-
+              ietf-privacypass-arc-protocol-01, 2 March 2026,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-
+              privacypass-arc-protocol-01>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -663,7 +660,7 @@ Table of Contents
               Pass Architecture", RFC 9576, DOI 10.17487/RFC9576, June
               2024, <https://www.rfc-editor.org/rfc/rfc9576>.
 
-10.2.  Informative References
+9.2.  Informative References
 
    [Cloudflare-2025]
               Cloudflare, "Cloudflare 2025 Year in Review", 2025,
