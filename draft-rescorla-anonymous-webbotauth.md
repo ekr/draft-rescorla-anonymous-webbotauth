@@ -75,7 +75,8 @@ sender.
 # Introduction
 
 DISCLAIMER: This is a work-in-progress draft and has not yet
-seen significant security analysis.
+seen significant security analysis. It is being published
+at an early stage for discussion purposes.
 
 
 Automated agents ("bots") represent a large fraction of the traffic
@@ -187,7 +188,8 @@ but individual rate limits are.
 ## Misbehavior Reporting
 
 TODO
-{:/comment}
+
+
 
 
 ## Attester Hiding
@@ -207,12 +209,12 @@ desirable to instead show that a user has a valid credential from
 _either_ the attester for user or the attester for bots without
 revealing which.
 
-
+{:/comment}
 # Concrete Implementation With Privacy Pass and ARC
 
 This section describes how to implement ABA using Privacy Pass {{!RFC9576}}, and
 Anonymous Rate-Limited Credentials
-{{!I-D.yun-privacypass-crypto-arc}}. While this
+{{!I-D.ietf-privacypass-arc-protocol}} {{!I-D.ietf-privacypass-arc-crypto}}. While this
 is not the only possible implementation approach, it leverages existing
 deployed and proposed IETF technologies and thus avoids duplicated
 functionality and fits well into existing deployments.
@@ -251,7 +253,7 @@ ARC).
 In ABA, the Attestation is performed with a combination of a general
 zero-knowledge proof (ZKP) system such as {{!I-D.google-cfrg-libzk}}
 and the Token is generated using ARC, as described in
-{{Section 8.1 of I-D.yun-privacypass-crypto-arc}}.
+{{Section 8.1 of I-D.ietf-privacypass-arc-protocol}}.
 The general ZKP system allows the
 Client to prove an arbitrary predicate about a credential but is
 expensive; ARC allows Issuers to create inexpensive anonymous
@@ -301,18 +303,18 @@ information:
    using this Credential (potentially within a given time window).
 
 Assuming that the Client's proof verifies correctly and the
-Attester is acceptable, the Issuer issues an ARC credential and
-informs the Client of the associated rate limit. For instance, if
-the Attester has a policy designed for high traffic bots, the
-Issuer might use one rate limit, whereas if the policy is
-designed for low traffic bots, the Issuer might use a lower
-rate limit. Note that the choice of rate limit is entirely up
-to the Issuer, but because all Clients authenticated by a given
-Attester are within the same anonymity set, it cannot provide
-different per-Client rate limits to Clients attested to by
-the same Attester. Similarly, because the rate limit is
-associated with the Issuer's ARC key, all Clients with the
-same key must have the same rate limit.
+Attester is acceptable, the Issuer issues an ARC credential.
+
+Each credential is associated with an Attester-specific rate
+limit. For instance, if the Attester has a policy designed for high
+traffic bots, the Issuer might use one rate limit, whereas if the
+policy is designed for low traffic bots, the Issuer might use a lower
+rate limit. Note that the choice of rate limit is entirely up to the
+Issuer, but because all Clients authenticated by a given Attester are
+within the same anonymity set, it cannot use different per-Client
+rate limits to multiple Clients attested to by the same Attester. Similarly,
+because all clients whose credentials are associated with the Issuer's
+key pair, all authorizations by Clients using the
 
 Once the Client has an ARC credential it can use it to authenticate
 to the Origin repeatedly up to the number of authentications
