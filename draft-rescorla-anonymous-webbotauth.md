@@ -28,6 +28,10 @@ author:
     fullname: "Eric Rescorla"
     organization: Independent
     email: "ekr@rtfm.com"
+ -
+    fullname: "Richard L. Barnes"
+    organization: Cisco
+    email: "rlb@ipv.sx"
 
 normative:
 
