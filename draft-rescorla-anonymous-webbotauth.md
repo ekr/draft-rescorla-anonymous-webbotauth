@@ -152,7 +152,7 @@ Register --------------------->
          <---- Attestation[Bob]
 
 Request + Attestation ---------------------------->
-                             Site only knows Issuer,
+                           Site only knows Attester
                                    not Alice or Bob
 <------------------------------------------Response
 ~~~
@@ -170,8 +170,9 @@ same attester, although it can discriminate between attesters.
 
 As a result, while it is possible to distinguish authenticated from
 unauthenticated bots, it is not possible to use the authentication
-method to either (1) selectively block individual bots or (2)
-determine which bots are accessing which resources.  It may still be
+method to either (1) selectively block individual bots(2)
+determine which bots are accessing which resources or (3) link
+multiple visits by the same bot. It may still be
 possible to identify bots via other mechanisms such as IP address or
 fingerprinting.
 
