@@ -250,11 +250,13 @@ ARC).
 
 In ABA, the Attestation is performed with a combination of a general
 zero-knowledge proof (ZKP) system such as {{!I-D.google-cfrg-libzk}}
-and the Token is an ARC token, as shown in
-{{fig-aba-with-privacy-pass}}. The general ZKP system allows the
+and the Token is generated using ARC, as described in
+{{Section 8.1 of I-D.yun-privacypass-crypto-arc}}.
+The general ZKP system allows the
 Client to prove an arbitrary predicate about a credential but is
 expensive; ARC allows Issuers to create inexpensive anonymous
 tokens which can be reused up to an arbitrary number of times.
+{{fig-aba-with-privacy-pass}} provides more detail
 
 ~~~
                                      +----------------------------.
@@ -264,17 +266,17 @@ tokens which can be reused up to an arbitrary number of times.
        |                     |        `------|-------------|------'
        |                     |               |             |
        +---- Cred-Request--->|               |             |
-       |<--------CWT---------+               |             |
+       |<----Credential------+               |             |
        |                     |               |             |
 
                              [Later]
 
        |<-------------------------------- TokenChallenge --+
        |                     |               |             |
-       +----TokenRequest + ZKP(CWT))-------->|             |
-       |<--TokenResponse[ARC(Limit=XXX)]-----+             |
+       +----TokenRequest + ZKP(Credential)-->|             |
+       |<--TokenResponse[ARC Credential]-----+             |
        |                                                   |
-       +---------------- Request + ARC Token-------------->|
+       +---------------- Request + ARC Credential -------->|
 ~~~
 {: #fig-aba-with-privacy-pass title="ABA with Privacy Pass" }
 
@@ -287,9 +289,10 @@ the Client in the form of a CWT {{!RFC8392}} signed by the Attester. This
 Credential can be used to authenticate to an arbitrary number of Issuers.
 
 When a client contacts a new site for which it does not yet
-have an ARC token, the client uses the Credential to authenticate
-to the Issuer and request an ARC token. This authentication is
-performed anonymously using a zero-knowledge proof as described
+have an ARC Credential, client uses the Credential to authenticate
+to the Issuer and request an ARC Credential. This authentication is
+performed anonymously using a zero-knowledge proof that it has
+a valid Credential (shown as "ZKP(Credential)" above), as described
 in {{auth-issuer}}, so that the Issuer only learns the following
 information:
 
@@ -298,8 +301,8 @@ information:
    using this Credential (potentially within a given time window).
 
 Assuming that the Client's proof verifies correctly and the
-Attester is acceptable, the Issuer issues an ARC token with
-a rate limit appropriate for the Attester. For instance, if
+Attester is acceptable, the Issuer issues an ARC credential and
+informs the Client of the associated rate limit. For instance, if
 the Attester has a policy designed for high traffic bots, the
 Issuer might use one rate limit, whereas if the policy is
 designed for low traffic bots, the Issuer might use a lower
@@ -307,16 +310,18 @@ rate limit. Note that the choice of rate limit is entirely up
 to the Issuer, but because all Clients authenticated by a given
 Attester are within the same anonymity set, it cannot provide
 different per-Client rate limits to Clients attested to by
-the same Attester.
+the same Attester. Similarly, because the rate limit is
+associated with the Issuer's ARC key, all Clients with the
+same key must have the same rate limit.
 
-Once the Client has an ARC token, it can use it to authenticate
+Once the Client has an ARC credential it can use it to authenticate
 to the Origin repeatedly up to the number of authentications
-in the rate limit associated with the token. These authentications
+in the rate limit associated with the Credential. These authentications
 are unlinkable provided that the Client does not exceed the rate
 limit; authentications beyond the rate limit are linkable.
 Because any Credential can only be used once for a given
 Issuer within a given time window, the total rate limit for a given Client/Issuer pair
-is bounded by the limit associated with the ARC token.
+is bounded by the limit associated with the ARC credential.
 
 ## Providing Attestation to the Issuer {#auth-issuer}
 
@@ -359,14 +364,14 @@ section.
 
 ### Only Generic Zero-Knowledge Proofs
 
-In principle, it is possible to omit the use of ARC tokens
+In principle, it is possible to omit the use of ARC
 and instead have the Client authenticate each transaction
 directly to the Origin. However, even efficient generic ZKP systems
 like Longfellow-ZK have far higher computational and bandwidth
 costs than more limited systems such as the one used in ARC.
 Using a generic ZKP system to demonstrate ownership of
 an attested Credential to the Issuer and then using that
-single interaction to obtain an ARC token makes it possible
+single interaction to obtain an ARC credential makes it possible
 to amortize the generic proof over a large number of subsequent
 interactions.
 
