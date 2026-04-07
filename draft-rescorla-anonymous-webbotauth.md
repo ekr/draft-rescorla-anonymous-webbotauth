@@ -87,6 +87,10 @@ sender.
 
 # Introduction
 
+DISCLAIMER: This is a work-in-progress draft and has not yet
+seen significant security analysis.
+
+
 Automated agents ("bots") represent a large fraction of the traffic
 to many Web sites. For example, Wikimedia reports that about 35% of
 its traffic is from bots {{PCMag-Wikipedia}} and Cloudflare reports
