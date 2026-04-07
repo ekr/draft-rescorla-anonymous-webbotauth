@@ -56,19 +56,6 @@ informative:
         name: "Dennis Jackson"
     date: 2025-12-02
     target: "https://github.com/antifraudcg/proposals/issues/22"
-  IACR-2025-2080:
-    title: "Issuer Hiding for BBS-Based Anonymous Credentials"
-    author:
-      -
-        ins: "J. Katz"
-        name: "Jonathan Katz"
-        org: "Google"
-      -
-        ins: "M. Sefranek"
-        name: "Marek Sefranek"
-        org: "TU Wien"
-    date: 2025-11-10
-    target: "https://eprint.iacr.org/2025/2080"
 
 ...
 
@@ -99,7 +86,7 @@ traffic loads--even when from otherwise desired bots--can have
 negative impacts on sites in terms of performance, stability,
 and operational costs.
 
-In addition, there may be certain types of bot traffic that sites which
+In addition, there may be certain types of bot traffic that sites wish
 to heavily restrict or block entirely. For example:
 
 - Volumetric traffic intended to create a DoS
@@ -117,7 +104,7 @@ between requests, appears to be retrieving the entire site, etc.) and restrict
 access by those endpoints unless they authenticate and the resulting identity is
 acceptable to the site. {{?I-D.meunier-webbotauth-registry}} describes one such
 architecture, where identities are rooted in the DNS and bots use digital
-signatures to tie their activitity to a given identity.
+signatures to tie their activity to a given identity.
 
 While directly identifying each bot allows the site to precisely
 monitor bots' behavior and restrict or block bots that it believes
@@ -142,14 +129,14 @@ that the bot is part of some set of authorized bots -- say those whose operators
 have agreed to good behavior -- and not the specific identity of the bot or the
 bot operator.
 
-This document describes an approach for using anonymous credential to
+This document describes an approach for using anonymous credentials to
 authenticate bots to websites.  In addition to laying out how the system works,
 we describe the trade-offs between anonymity and fine-grained abuse mitigation.
 
 
 # Architectural Overview {#architectural-overview}
 
-The overall structure of ABA is shown in {{architectural-overview}}.
+The overall structure of ABA is shown in {{fig-architecture-overview}}.
 
 ~~~
 Alice         Bob           Attester             Site
@@ -227,8 +214,8 @@ This section describes how to implement ABA using Privacy Pass {{!RFC9576}}, and
 Anonymous Rate-Limited Credentials
 {{!I-D.yun-privacypass-crypto-arc}}. While this
 is not the only possible implementation approach, it leverages existing
-deployed and proposed IETF technologies and thus avoids duplicating
-existing and fits well into existing deployments.
+deployed and proposed IETF technologies and thus avoids duplicated
+functionality and fits well into existing deployments.
 
 We make use of the "Joint Origin and Issuer Deployment Model" from
 {{Section 4.3 of RFC9576}}, reproduced below in
@@ -323,8 +310,8 @@ different per-Client rate limits to Clients attested to by
 the same Attester.
 
 Once the Client has an ARC token, it can use it to authenticate
-to the Origin repeatedly up to the number of authentications in
-in rate limit associated with the token. These authentications
+to the Origin repeatedly up to the number of authentications
+in the rate limit associated with the token. These authentications
 are unlinkable provided that the Client does not exceed the rate
 limit; authentications beyond the rate limit are linkable.
 Because any Credential can only be used once for a given
@@ -345,7 +332,7 @@ the following requirements:
 These requirements can be met by using a signed credential (in this
 case, a CWT {{!RFC8392}}), along with a generic circuit-based
 zero-knowledge proof system (in this case Longfellow-ZK
-{{!I-D.google-cfrg-libzk}}.  The interaction between the Attester and
+{{!I-D.google-cfrg-libzk}}).  The interaction between the Attester and
 the Client just yields an ordinary CWT and then the Client proves in
 zero-knowledge that they have a valid Credential from a given Attester.
 
@@ -386,12 +373,12 @@ interactions.
 ### Other Attestation Structures
 
 There are a number of other potential ways to convey attestations
-to the the Issuer, but each fails to fulfill one of the requirements
+to the Issuer, but each fails to fulfill one of the requirements
 in {{auth-issuer}}.
 
 * _Non-anonymous credentials_ allow for linkage of bots at redemption
   time.
-* _Single-show credentials_ like those in Privacy Pass either allow
+* _Single-show credentials_ like those in Privacy Pass either allow or
   require the bot to interact with the Attester for each site it
   wants to interact with (otherwise linkage is possible).
 * _Camenisch-Lysanskaya credentials_ do not prevent multiple shows
@@ -435,7 +422,7 @@ of those customers.
 
 ## Number of Attesters
 
-In general, it is desirable to for bots to be able to acquire
+In general, it is desirable for bots to be able to acquire
 a relatively small number of credentials and have high confidence that
 those credentials will be compatible with most if not all of the
 sites that the bot wishes to contact. This can be most straightforwardly
@@ -504,7 +491,7 @@ versions of the first two use cases. Specifically, because allow and
 deny lists are enforced at the attester, any given allow or deny list
 needs to be fairly widely used--or at least used at a big site--in
 order to be practical. For instance, an attester could have the policy
- {not to issue to any bot which was illegal to do business with in a
+not to issue to any bot which was illegal to do business with in a
 given jurisdiction, because many sites might be interested in such a
 policy, but a policy where a site doesn't want to allow access by a
 direct competitor is more difficult to execute.
@@ -585,7 +572,7 @@ still possible to learn information about the client by manipulating
 the attester set. For example, a site acting as an Attester could use
 different keys for each user or a site could use different Attester
 subsets to identify which of a set of Attesters was in use.
-Transparency/consistency mechansims like
+Transparency/consistency mechanisms like
 {{?I-D.ietf-privacypass-key-consistency}} may be useful in detecting
 this form of attack.
 
