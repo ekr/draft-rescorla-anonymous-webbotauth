@@ -185,7 +185,7 @@ discussed below.
 
 Assuring the anonymity of bot requests means imposes some limits on how this
 authentication mechanism can be used to counter abuse.  These trade-offs are
-discussed in detail in {{#use-case-analysis}}, and the below bullets provide a
+discussed in detail in {{use-case-analysis}}, and the below bullets provide a
 summary:
 
 * ABA supports:
@@ -283,7 +283,7 @@ ABA extends this scheme with a zero-knowledge proof (ZKP) system (e.g.,
 {{!I-D.google-cfrg-libzk}}) in order to assure that the Attester's attestation
 does not leak information to the Issuer that could deanonymize the Client.  This
 property is especially important in the "server as attester" case
-{{#server-as-attester}}, and is not assured by ARC itself.  In effect, ABA uses
+{{server-as-attester}}, and is not assured by ARC itself.  In effect, ABA uses
 an expensive attestion and ZKP operation to authorize the issuance of ARC tokens
 that can be used cheaply on every request.
 
@@ -295,14 +295,14 @@ that can be used cheaply on every request.
        |                     |        `------|-------------|------'
        |                     |               |             |
        +---- Cred-Request--->|               |             |
-       |<----Credential------+               |             |
+       |<----Attestation------+               |             |
        |                     |               |             |
 
                              [Later]
 
        |<-------------------------------- TokenChallenge --+
        |                     |               |             |
-       +----TokenRequest + ZKP(Credential)-->|             |
+       +----TokenRequest + ZKP(Attestation)-->|             |
        |<--TokenResponse[ARC Credential]-----+             |
        |                                                   |
        +---------------- Request + ARC Credential -------->|
@@ -313,23 +313,21 @@ When a new Client is deployed, it first must register with some set
 of Attesters. These Attesters will require the bot to demonstrate
 that it complies with their policies, for instance that it is a
 registered corporation, holds a domain name or an IP address block,
-etc. Once the Attester is satisfied, it issues a Credential to
+etc. Once the Attester is satisfied, it issues a Attestation to
 the Client in the form of a CWT {{!RFC8392}} signed by the Attester. This
-Credential can be used to authenticate to an arbitrary number of Issuers.
-
-[ RLB: Assuming that in the below, Credential -> Attestation ]
+Attestation can be used to authenticate to an arbitrary number of Issuers.
 
 When a client contacts a new site for which it does not yet
-have an ARC Credential, client uses the Credential to authenticate
+have an ARC Credential, client uses the Attestation to authenticate
 to the Issuer and request an ARC Credential. This authentication is
 performed anonymously using a zero-knowledge proof that it has
-a valid Credential (shown as "ZKP(Credential)" above), as described
+a valid Attestation (shown as "ZKP(Attestation)" above), as described
 in {{auth-issuer}}, so that the Issuer only learns the following
 information:
 
 1. This Client has been authenticated by the Attester.
 1. This Client has not authenticated to the Issuer previously
-   using this Credential (potentially within a given time window).
+   using this Attestation (potentially within a given time window).
 
 Assuming that the Client's proof verifies correctly and the
 Attester is acceptable, the Issuer issues an ARC credential.
@@ -359,10 +357,10 @@ is bounded by the limit associated with the ARC credential.
 The protocol for Attestation to the Issuer is designed to meet
 the following requirements:
 
-* A Credential can be used with an arbitrary number of Issuers.
-* A Credential can only be used once with a single Issuer within
+* A Attestation can be used with an arbitrary number of Issuers.
+* A Attestation can only be used once with a single Issuer within
   a given time window
-* Credential presentations are unlinkable, both between
+* Attestation presentations are unlinkable, both between
   Issuer and Attester and between Issuers.
 
 These requirements can be met by using a signed credential (in this
@@ -370,7 +368,7 @@ case, a CWT {{!RFC8392}}), along with a generic circuit-based
 zero-knowledge proof system (in this case Longfellow-ZK
 {{!I-D.google-cfrg-libzk}}).  The interaction between the Attester and
 the Client just yields an ordinary CWT and then the Client proves in
-zero-knowledge that they have a valid Credential from a given Attester.
+zero-knowledge that they have a valid Attestation from a given Attester.
 
 In order to prevent replay, the proof also includes an Issuer-specific
 nullifier tied to the Issuer's domain name and the current time
@@ -382,10 +380,9 @@ possible to use it to conceal the  Attester if desired: for
 example if there are multiple Attesters who follow equivalent
 vetting procedures, then the Issuer does not need to know which
 Attester the Client used; the ZKP can be designed to prove
-that the Client has a Credential from one of a set of Attesters
+that the Client has a Attestation from one of a set of Attesters
 within the same equivalence class; of course, the Issuer will
 need to use the same rate limit for all such Attesters.
-
 
 ## Alternate Cryptographic Approaches
 
@@ -401,7 +398,7 @@ directly to the Origin. However, even efficient generic ZKP systems
 like Longfellow-ZK have far higher computational and bandwidth
 costs than more limited systems such as the one used in ARC.
 Using a generic ZKP system to demonstrate ownership of
-an attested Credential to the Issuer and then using that
+an attested Attestation to the Issuer and then using that
 single interaction to obtain an ARC credential makes it possible
 to amortize the generic proof over a large number of subsequent
 interactions.
@@ -549,12 +546,7 @@ This use case is not addressed by this document.
 Because this use case does not depend on determining which bot is which,
 but only which traffic is human versus bot, the architecture in this
 document may be able to address this use case, depending on the
-ultimate deployment model, in particular whether bots and humans
-use different attesters and whether the attester is concealed.
-
-[ RLB: The attester concealment section is commented out above.  Most of the
-text assumes the attester is visible, so I would suggest we delete text related
-to concealment. ]
+ultimate deployment model.
 
 ### Authenticating Site Services
 
