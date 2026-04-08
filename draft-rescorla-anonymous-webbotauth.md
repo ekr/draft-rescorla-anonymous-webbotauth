@@ -295,14 +295,14 @@ that can be used cheaply on every request.
        |                     |        `------|-------------|------'
        |                     |               |             |
        +---- Cred-Request--->|               |             |
-       |<----Attestation------+               |             |
+       |<---Attestation------+               |             |
        |                     |               |             |
 
                              [Later]
 
        |<-------------------------------- TokenChallenge --+
        |                     |               |             |
-       +----TokenRequest + ZKP(Attestation)-->|             |
+       +---TokenRequest + ZKP(Attestation)-->|             |
        |<--TokenResponse[ARC Credential]-----+             |
        |                                                   |
        +---------------- Request + ARC Credential -------->|
