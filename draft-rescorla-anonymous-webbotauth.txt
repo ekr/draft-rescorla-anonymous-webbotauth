@@ -5,8 +5,8 @@
 Network Working Group                                        E. Rescorla
 Internet-Draft                                               Independent
 Intended status: Informational                              R. L. Barnes
-Expires: 9 October 2026                                            Cisco
-                                                            7 April 2026
+Expires: 10 October 2026                                           Cisco
+                                                            8 April 2026
 
 
  Anonymous Bot Authentication: Authorization and Rate Limiting for Web
@@ -51,7 +51,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 9 October 2026.
+   This Internet-Draft will expire on 10 October 2026.
 
 Copyright Notice
 
@@ -313,14 +313,14 @@ Table of Contents
           |                     |        `------|-------------|------'
           |                     |               |             |
           +---- Cred-Request--->|               |             |
-          |<----Attestation------+               |             |
+          |<---Attestation------+               |             |
           |                     |               |             |
 
                                 [Later]
 
           |<-------------------------------- TokenChallenge --+
           |                     |               |             |
-          +----TokenRequest + ZKP(Attestation)-->|             |
+          +---TokenRequest + ZKP(Attestation)-->|             |
           |<--TokenResponse[ARC Credential]-----+             |
           |                                                   |
           +---------------- Request + ARC Credential -------->|
