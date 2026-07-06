@@ -144,29 +144,31 @@ we describe the trade-offs between anonymity and fine-grained abuse mitigation.
 The overall structure of ABA is shown in {{fig-architecture-overview}}.
 
 ~~~
-Alice         Bob           Attester             Site
+Alice         Bob           Anchor             Site
 
 Register --------------------->
-<----------- Attestation[Alice]
+<----------- Endorsement[Alice]
               Register ------->
-         <---- Attestation[Bob]
+         <---- Endorsement[Bob]
 
-Request + Attestation ---------------------------->
-                           Site only knows Attester
+Request + Endorsement ---------------------------->
+                             Site only knows Anchor
                                    not Alice or Bob
 <------------------------------------------Response
 ~~~
 {: #fig-architecture-overview title="Architectural Overview" }
 
+Note: we are borrowing terms here from MoLE {{!I-D.jms-mole-architecture}}.
+
 Prior to contacting the site, Alice and Bob both register with a
-credential Attester, which is responsible for evaluating
-whether they comply with the Attester's policies.
+credential Anchor , which is responsible for evaluating
+whether they comply with the Anchor's policies.
 They each are issued an anonymous credential, which
 they can use to authenticate to the server.  What makes the credential
 anonymous is that the site only learns that someone with a credential
-from the Attester is authenticating, not whether it's Alice or Bob. This
+from the Anchor is authenticating, not whether it's Alice or Bob. This
 prevents the site from discriminating _between_ customers of the
-same attester, although it can discriminate between attesters.
+same anchor, although it can discriminate between anchors.
 
 As a result, while it is possible to distinguish authenticated from
 unauthenticated bots, it is not possible to use the authentication
@@ -176,8 +178,8 @@ multiple visits by the same bot. It may still be
 possible to identify bots via other mechanisms such as IP address or
 fingerprinting.
 
-In some cases it may be sufficient merely to identify the attester, for
-instance if the attester performs some vetting to ensure policy
+In some cases it may be sufficient merely to identify the anchor, for
+instance if the anchor performs some vetting to ensure policy
 compliance. However, in some cases this may be insufficient, as
 discussed below.
 
@@ -207,9 +209,9 @@ party are incompatible with anonymous authentication.
 ## Rate Limiting
 
 In some cases it may be desirable to limit any individual agent to a
-specific number of requests. For example, a given Attester may have a
+specific number of requests. For example, a given Anchor may have a
 large number of subscribers but only a few may access a given site. In
-this case, overall rate limits for an attester will not be effective,
+this case, overall rate limits for an anchor will not be effective,
 but individual rate limits are.
 
 {::comment}
@@ -220,169 +222,144 @@ TODO
 
 
 
-## Attester Hiding
+## Anchor Hiding
 
 Conversely, in some cases, it is desirable to conceal which of a set
-of Attesters issued a credential. As a concrete example, the IETF
+of Anchors issued a credential. As a concrete example, the IETF
 PrivacyPass WG is designing anonymous credentials that can be issued
 to individuals indicating that they have passed some set of checks
 indicating that they represent a human. As discussed below, it may be
 possible to use the same type of credential for PrivacyPass and for
-ABA, even if the Attesters for those credentials are different. A site
+ABA, even if the Anchors for those credentials are different. A site
 which accepts both credentials for users and bots does not necessarily
 need to know which type of user a given request comes from--as long as
 there is some rate limiting to prevent individual credentials from
 being used for large scale bot activity--in which case it may be
 desirable to instead show that a user has a valid credential from
-_either_ the attester for user or the attester for bots without
+_either_ the anchor for user or the anchor for bots without
 revealing which.
 
 {:/comment}
 
-# Concrete Implementation With Privacy Pass and ARC
+# Concrete Implementation With MoLE
 
-This section describes how to implement ABA using Privacy Pass {{!RFC9576}}, and
-Anonymous Rate-Limited Credentials
-{{!I-D.ietf-privacypass-arc-protocol}} {{!I-D.ietf-privacypass-arc-crypto}}. While this
-is not the only possible implementation approach, it leverages existing
-deployed and proposed IETF technologies and thus avoids duplicated
-functionality and fits well into existing deployments.
-
-We make use of the "Joint Origin and Issuer Deployment Model" from
-{{Section 4.3 of RFC9576}}, reproduced below in
-{{fig-privacy-pass-model}}:
+This section describes how to implement ABA using mechanisms from MoLE
+{{I-D.jms-mole-architecture}}. The MoLE architecture has three
+entities, as shown in {{fig-mole-model}}, reproduced from Section 4
+of {{!I-D.jms-mole-architecture}}.
 
 ~~~
-                                     +----------------------------.
-   +--------+          +----------+  |  +--------+     +--------+  |
-   | Client |          | Attester |  |  | Issuer |     | Origin |  |
-   +---+----+          +-----+----+  |  +----+---+     +---+----+  |
-       |                     |        `------|-------------|------'
-       |<-------------------------------- TokenChallenge --+
-       |                     |               |             |
-       |<=== Attestation ===>|               |             |
-       |                     |               |             |
-       +------------ TokenRequest ---------->|             |
-       |<---------- TokenResponse -----------+             |
-       |                                                   |
-       +--------------------- Token ----------------------->
-       |                                                   |
-~~~
-{: #fig-privacy-pass-model title="Privacy Pass Model (Joint Origin and Issuer)" }
 
-In this model, the Client interacts with an Attester, which is
+   +--------+            +--------+              +-----------+
+   | Anchor |            | Client |              | Moderator |
+   +---+----+            +---+----+              +-----+-----+
+       |                     |                         |
+       |<~~~ Interaction ~~~>|                         |
+       |                     |                         |
+       +==== Endorsement ===>|                         |
+       |                     |                         |
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+       |                     |                         |
+       |                     |<~~~~~ Interaction ~~~~~>|
+       |                     |                         |
+       |                +---- (If needed) -----------------.
+       |                |    |                         |    |
+       |                |    +------ Endorsement ----->|    |
+       |                |    |                         |    |
+       |                |    |<----- Credential -------+    |
+       |                |    |                         |    |
+       |                 `---------------------------------'
+       |                     |                         |
+       |                     +====== Presentation ====>|
+       |                     |                         |
+~~~
+{: #fig-mole-model title="MoLE Architecture" }
+
+In this model, the Client interacts with an Anchor, which is
 responsible for determining whether the client conforms to the
-required policy. The Attester provides an Attestation which can then
-be presented to the site (the Issuer in the diagram above), which
-provides a Token.  The bot can then use the Token to get services from
-the site (the Origin in the diagram above). The Issuer and the Origin
-are operated by the same entity (this is a technical constraint of
-ARC).
+required policy. The Anchor provides an Endorsement which can then
+be redeemed by the client with the Moderator for a Credential, which
+can then be presentated to Moderator at a future time in order
+to provide anonymous authentication. The Moderator can be
+operated directly by the site/origin or can be separate from the
+site but cooperating with it.
 
-ABA extends this scheme with a zero-knowledge proof (ZKP) system (e.g.,
-{{!I-D.google-cfrg-libzk}}) in order to assure that the Attester's attestation
-does not leak information to the Issuer that could deanonymize the Client.  This
-property is especially important in the "server as attester" case
-{{server-as-attester}}, and is not assured by ARC itself.  In effect, ABA uses
-an expensive attestion and ZKP operation to authorize the issuance of ARC tokens
-that can be used cheaply on every request.
+MoLE supports a number of different types of Endorsement
+and Credential. For concreteness, this document describes the
+use of Longfellow-based Endorsements and ACT-based Credentials
+(Sections 4.2 and 5.1 of {{!I-D.jms-mole-protocols}} respectively).
+Other Endorsement and Credentials may have somewhat different
+operational properties.
 
-~~~
-                                     +----------------------------.
-   +--------+          +----------+  |  +--------+     +--------+  |
-   | Client |          | Attester |  |  | Issuer |     | Origin |  |
-   +---+----+          +-----+----+  |  +----+---+     +---+----+  |
-       |                     |        `------|-------------|------'
-       |                     |               |             |
-       +---- Cred-Request--->|               |             |
-       |<---Attestation------+               |             |
-       |                     |               |             |
-
-                             [Later]
-
-       |<-------------------------------- TokenChallenge --+
-       |                     |               |             |
-       +---TokenRequest + ZKP(Attestation)-->|             |
-       |<--TokenResponse[ARC Credential]-----+             |
-       |                                                   |
-       +---------------- Request + ARC Credential -------->|
-~~~
-{: #fig-aba-with-privacy-pass title="ABA with Privacy Pass" }
-
-When a new Client is deployed, it first must register with some set
-of Attesters. These Attesters will require the bot to demonstrate
-that it complies with their policies, for instance that it is a
-registered corporation, holds a domain name or an IP address block,
-etc. Once the Attester is satisfied, it issues a Attestation to
-the Client in the form of a CWT {{!RFC8392}} signed by the Attester. This
-Attestation can be used to authenticate to an arbitrary number of Issuers.
+When a new Client is deployed, it first must register with some set of
+Anchors. These Anchors will require the bot to demonstrate that it
+complies with their policies, for instance that it is a registered
+corporation, holds a domain name or an IP address block, etc.
+Once the Anchor is satisfied, it issues a Endorsement to
+the Client in the form of a CWT {{!RFC8392}} signed by the Anchor. This
+Endorsement can be used to authenticate to an arbitrary number of Moderators.
 
 When a client contacts a new site for which it does not yet
-have an ARC Credential, client uses the Attestation to authenticate
-to the Issuer and request an ARC Credential. This authentication is
+have a Credential, the client uses the Endorsement to authenticate
+to the Moderator and request an ARC Credential. This authentication is
 performed anonymously using a zero-knowledge proof that it has
-a valid Attestation (shown as "ZKP(Attestation)" above), as described
-in {{auth-issuer}}, so that the Issuer only learns the following
+a valid Endorsement  so that the Moderator only learns the following
 information:
 
-1. This Client has been authenticated by the Attester.
-1. This Client has not authenticated to the Issuer previously
-   using this Attestation (potentially within a given time window).
+1. This Client has been authenticated by the Anchor.
+1. This Client has not authenticated to the Moderator previously
+   using this Endorsement within a given time window.
 
-Assuming that the Client's proof verifies correctly and the
-Attester is acceptable, the Issuer issues an ARC credential.
-
-Each credential is associated with a rate limit, which may
-be Attester-dependent. For instance, if the Attester has a policy designed for high
-traffic bots, the Issuer might use one rate limit, whereas if the
-policy is designed for low traffic bots, the Issuer might use a lower
-rate limit. Note that the choice of rate limit is entirely up to the
-Issuer, but because all Clients authenticated by a given Attester are
+Assuming that the Client's proof verifies correctly and the Anchor is
+acceptable, the Moderator issues a Credential. Each credential is
+associated with a usage limit, which may be Anchor-dependent. For
+instance, if the Anchor has a policy designed for high traffic bots,
+the Moderator might use usage rate limit, whereas if the policy is
+designed for low traffic bots, the Moderator might use a lower usage
+limit. Note that the choice of usage limit is entirely up to the
+Moderator, but because all Clients authenticated by a given Anchor are
 within the same anonymity set, it cannot use different per-Client
-rate limits to multiple Clients attested to by the same Attester. Similarly,
-because all clients whose credentials are associated with the Issuer's
-key pair, all authorizations by Clients using the
+usage limits to multiple Clients attested to by the same Anchor.
 
-Once the Client has an ARC credential it can use it to authenticate
-to the Origin repeatedly up to the number of authentications
-in the rate limit associated with the Credential. These authentications
-are unlinkable provided that the Client does not exceed the rate
-limit; authentications beyond the rate limit are linkable.
-Because any Credential can only be used once for a given
-Issuer within a given time window, the total rate limit for a given Client/Issuer pair
-is bounded by the limit associated with the ARC credential.
+Once the Client has a Credential it can use it to authenticate
+to the Moderator repeatedly.
 
-## Providing Attestation to the Issuer {#auth-issuer}
+## Providing Endorsement to the Moderator {#auth-Moderator}
 
-The protocol for Attestation to the Issuer is designed to meet
+The protocol for Endorsement to the Moderator is designed to meet
 the following requirements:
 
-* A Attestation can be used with an arbitrary number of Issuers.
-* A Attestation can only be used once with a single Issuer within
+* A Endorsement can be used with an arbitrary number of Moderators.
+* A Endorsement can only be used once with a single Moderator within
   a given time window
-* Attestation presentations are unlinkable, both between
-  Issuer and Attester and between Issuers.
+* Endorsement presentations are unlinkable, both between
+  Moderator and Anchor and between Moderators.
 
 These requirements can be met by using a signed credential (in this
 case, a CWT {{!RFC8392}}), along with a generic circuit-based
 zero-knowledge proof system (in this case Longfellow-ZK
-{{!I-D.google-cfrg-libzk}}).  The interaction between the Attester and
+{{!I-D.google-cfrg-libzk}}).  The interaction between the Anchor and
 the Client just yields an ordinary CWT and then the Client proves in
-zero-knowledge that they have a valid Attestation from a given Attester.
+zero-knowledge that they have a valid Endorsement from a given Anchor.
 
-In order to prevent replay, the proof also includes an Issuer-specific
-nullifier tied to the Issuer's domain name and the current time
+In order to prevent replay, the proof also includes an Moderator-specific
+nullifier tied to the Moderator's domain name and the current time
 window. While the proof itself varies between presentations, the
 nullifier remains the same and therefore can be used to detect replay.
 
 Because we are using a generic ZK system it should also be
-possible to use it to conceal the  Attester if desired: for
-example if there are multiple Attesters who follow equivalent
-vetting procedures, then the Issuer does not need to know which
-Attester the Client used; the ZKP can be designed to prove
-that the Client has a Attestation from one of a set of Attesters
-within the same equivalence class; of course, the Issuer will
-need to use the same rate limit for all such Attesters.
+possible to use it to conceal the  Anchor if desired: for
+example if there are multiple Anchors who follow equivalent
+vetting procedures, then the Moderator does not need to know which
+Anchor the Client used; the ZKP can be designed to prove
+that the Client has a Endorsement from one of a set of Anchors
+within the same equivalence class; of course, the Moderator will
+need to use the same usage limit for all such Anchors.
+
+Note: The Longfellow nullifier mechanism in MoLE does not appear
+to include the Moderator's identity, thus potentially precluding
+Endorsement reuse.
+
 
 ## Alternate Cryptographic Approaches
 
@@ -396,78 +373,68 @@ In principle, it is possible to omit the use of ARC
 and instead have the Client authenticate each transaction
 directly to the Origin. However, even efficient generic ZKP systems
 like Longfellow-ZK have far higher computational and bandwidth
-costs than more limited systems such as the one used in ARC.
+costs than more limited systems such as Credential mechanisms
+provided in MoLE.
 Using a generic ZKP system to demonstrate ownership of
-an attested Attestation to the Issuer and then using that
-single interaction to obtain an ARC credential makes it possible
+an attested Endorsement to the Moderator and then using that
+single interaction to obtain a Credential makes it possible
 to amortize the generic proof over a large number of subsequent
 interactions.
 
-### Other Attestation Structures
+### Other Endorsement Structures
 
-There are a number of other potential ways to convey attestations
-to the Issuer, but each fails to fulfill one of the requirements
-in {{auth-issuer}}.
-
-* _Non-anonymous credentials_ allow for linkage of bots at redemption
-  time.
-* _Single-show credentials_ like those in Privacy Pass either allow or
-  require the bot to interact with the Attester for each site it
-  wants to interact with (otherwise linkage is possible).
-* _Camenisch-Lysanskaya credentials_ do not prevent multiple shows
-  to the same server, thus precluding rate limiting.
-* _BBS+_ credentials require the use of pairings and have no obvious
-  transition to post-quantum algorithms.
-
-Note that in cases where the Attester and the Issuer are one and
-the same (see {{server-as-attester}}), it is not necessary to
-convey the attestation to the Issuer and so the generic ZKP
-system can be omitted.
+MoLE also includes an Endorsement mechanism called Issuer-Hiding Anonymous
+Token (IHAT). IHAT uses single-show endorsements, so that the Client
+needs to retrieve a new Endorsement for each Moderator. This is more
+computationally efficient than a generic ZKP and allows the Anchor
+to have more tight control of the rate at which the Client makes
+requests, but may be challenging in settings where the bot has to
+contact many sites, as with crawlers.
 
 # Issuance Models
 
 Anonymous credentials are compatible with a variety of issuance
 models, as discussed in this section.
 
-## Independent Attesters
+## Independent Anchors
 
 Much like millions of websites rely on a much smaller number of independent
 WebPKI certificate authorities, it is possible to have a system of independent
-Attesters that are broadly relied upon by many websites.  Each attester could
+Anchors that are broadly relied upon by many websites.  Each anchor could
 publish the policy that it uses to issue credentials (e.g., verifying corporate
-existence, subject pays $100, etc.). Sites can then select which attesters have
+existence, subject pays $100, etc.). Sites can then select which anchors have
 policies they are willing to accept. It is also possible to have multiple
-Attesters who conform to a common set of policies, as in the WebPKI, where each
+Anchors who conform to a common set of policies, as in the WebPKI, where each
 CA has to meet the same requirements, but site operators have the choice of
 which CA to use.
 
-## Server as Attester
+## Server as Anchor
 
-It is also possible for a server to act as their own Attester. This is
+It is also possible for a server to act as their own Anchor. This is
 not likely to be practical for small sites, as bots will simply opt
 not to authenticate to those sites at all. However, a large CDN which
-hosts many sites might opt to operate its own Attester, and it could
-be practical for bots to register with such an Attester. Note that
-this approach makes it possible for the Attester to refuse
+hosts many sites might opt to operate its own Anchor, and it could
+be practical for bots to register with such an Anchor. Note that
+this approach makes it possible for the Anchor to refuse
 service to individual Clients, but not to selectively do so for
-individual customers unless it uses separate Issuers for each
+individual customers unless it uses separate Moderators for each
 of those customers.
 
 The ZKP element of ABA ensures that clients remain anonymous even in this case,
-since the client's redemption of an Attestation is not linkable to its issuance.
+since the client's redemption of an Endorsement is not linkable to its issuance.
 
-## Number of Attesters
+## Number of Anchors
 
 In general, it is desirable for bots to be able to acquire
 a relatively small number of credentials and have high confidence that
 those credentials will be compatible with most if not all of the
 sites that the bot wishes to contact. This can be most straightforwardly
-accomplished if there is only a small number of attesters, but it can
-also work if there are a larger number of attesters but sites converge
-on a relatively small number of policies (expressed as which attesters
+accomplished if there is only a small number of anchors, but it can
+also work if there are a larger number of anchors but sites converge
+on a relatively small number of policies (expressed as which anchors
 they support) such that a bot can acquire a set of credentials that
 covers all of those policies. The least desirable outcome is if
-bots routinely are prompted to provide credentials for a new attester.
+bots routinely are prompted to provide credentials for a new anchor.
 
 # Relationship to Browser Authentication
 
@@ -476,10 +443,8 @@ authentication happening in the PrivacyPass WG and in the W3C
 AntiFraud Community Group. While that work is directed towards
 access control for users, the same cryptographic techniques
 can be used to authenticate bots. A good description of
-the vision and requirements can be found at {{PACT-Issue}}.
-The ideal scenario would be to be able to use compatible tokens
-for users and bots, differing only in the issuance policies,
-the attesters, and the rate limits.
+the vision and requirements can be found at {{PACT-Issue}},
+and the MoLE effort that has grown out of it.
 
 # Use Case Analysis
 
@@ -523,16 +488,16 @@ access:
 
 ABA can be used for the second two use cases and can be used for some
 versions of the first two use cases. However, the more fine-grained
-controls are used (e.g., by having many Attesters with different
+controls are used (e.g., by having many Anchors with different
 policies) the worse the privacy and scalability properties of the
 system become.n
 
 ### Providing Different Content to Bots
 
 The architecture in this document may be usable to provide different
-content to bots generally than humans depending on the structure of attesters
-(e.g., does a given attester issue to both bots and to humans) and
-whether techniques are used to conceal which attester is in use.
+content to bots generally than humans depending on the structure of anchors
+(e.g., does a given anchor issue to both bots and to humans) and
+whether techniques are used to conceal which anchor is in use.
 However, they are not generally useful to provide different content
 to specific bots.
 
@@ -557,9 +522,9 @@ This use case is not addressed by this document.
 ### IP Address Mobility
 
 ABA provides authentication for bots independent of IP address.
-Because ABA authentication is at the Attester rather than the Client
+Because ABA authentication is at the Anchor rather than the Client
 level, it is not possible to use ABA to build bot-specific reputations
-based on observed bot activity; instead the Attester is responsible
+based on observed bot activity; instead the Anchor is responsible
 for assessing bots and then providing that information to sites.
 
 ### Sharing IP Addresses
@@ -576,11 +541,11 @@ This use case is not addressed by this document.
 
 ### Conveying Contextual Information
 
-Because different Attesters can have different policies and Attesters
+Because different Anchors can have different policies and Anchors
 can have multiple policies, ABA allows for limited conveyance of
 contextual information. While in principle this information can
 be arbitrarily fine-grained, coarse-grained information ensures
-a larger anonymity set (see {{number-of-attesters}}).
+a larger anonymity set (see {{number-of-anchors}}).
 
 # Conventions and Definitions
 
@@ -596,12 +561,12 @@ is possible to make some general observations.
 ## Anonymity Set
 
 The anonymity set for a given transaction is the set of credentials
-associated with a given Attester, or, if Attester hiding is used, the set
-of credentials associated with the set of attesters. However, it is
+associated with a given Anchor, or, if Anchor hiding is used, the set
+of credentials associated with the set of anchors. However, it is
 still possible to learn information about the client by manipulating
-the Attester set. For example, a site acting as an Attester could use
-different keys for each user or a site could use different Attester
-subsets to identify which of a set of Attesters was in use.
+the Anchor set. For example, a site acting as an Anchor could use
+different keys for each user or a site could use different Anchor
+subsets to identify which of a set of Anchors was in use.
 Transparency/consistency mechanisms like
 {{?I-D.ietf-privacypass-key-consistency}} may be useful in detecting
 this form of attack.
