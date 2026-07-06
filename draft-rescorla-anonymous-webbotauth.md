@@ -289,7 +289,7 @@ and Credential. For concreteness, this document describes the
 use of Longfellow-based Endorsements and ACT-based Credentials
 (Sections 4.2 and 5.1 of {{!I-D.jms-mole-protocols}} respectively).
 Other Endorsement and Credentials may have somewhat different
-operational properties.
+operational properties, and are covered briefly in {{other-endorsement-structures}}.
 
 When a new Client is deployed, it first must register with some set of
 Anchors. These Anchors will require the bot to demonstrate that it
@@ -301,7 +301,7 @@ Endorsement can be used to authenticate to an arbitrary number of Moderators.
 
 When a client contacts a new site for which it does not yet
 have a Credential, the client uses the Endorsement to authenticate
-to the Moderator and request an ARC Credential. This authentication is
+to the Moderator and request a Credential. This authentication is
 performed anonymously using a zero-knowledge proof that it has
 a valid Endorsement  so that the Moderator only learns the following
 information:
@@ -359,6 +359,7 @@ need to use the same usage limit for all such Anchors.
 Note: The Longfellow nullifier mechanism in MoLE does not appear
 to include the Moderator's identity, thus potentially precluding
 Endorsement reuse.
+[[https://github.com/Moderation-of-unLinkable-Endorsements/internet-drafts/issues/28]]
 
 
 ## Alternate Cryptographic Approaches
@@ -369,7 +370,7 @@ section.
 
 ### Only Generic Zero-Knowledge Proofs
 
-In principle, it is possible to omit the use of ARC
+In principle, it is possible to omit the use of Credentials
 and instead have the Client authenticate each transaction
 directly to the Origin. However, even efficient generic ZKP systems
 like Longfellow-ZK have far higher computational and bandwidth
