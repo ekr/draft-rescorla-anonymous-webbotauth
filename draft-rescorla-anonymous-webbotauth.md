@@ -107,7 +107,7 @@ automated clients. Sites can use behavioral analysis to determine when traffic
 from a given endpoint appears bot-like (e.g., is high volume, has low latency
 between requests, appears to be retrieving the entire site, etc.) and restrict
 access by those endpoints unless they authenticate and the resulting identity is
-acceptable to the site. {{?I-D.meunier-webbotauth-registry}} describes one such
+acceptable to the site. {{?I-D.meunier-webbotauth-httpsig-protocol}} describes one such
 architecture, where identities are rooted in the DNS and bots use digital
 signatures to tie their activity to a given identity.
 
@@ -161,7 +161,7 @@ Request + Endorsement ---------------------------->
 Note: we are borrowing terms here from MoLE {{!I-D.jms-mole-architecture}}.
 
 Prior to contacting the site, Alice and Bob both register with a
-credential Anchor , which is responsible for evaluating
+credential Anchor, which is responsible for evaluating
 whether they comply with the Anchor's policies.
 They each are issued an anonymous credential, which
 they can use to authenticate to the server.  What makes the credential
