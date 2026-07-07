@@ -1328,7 +1328,7 @@ automated clients. Sites can use behavioral analysis to determine when traffic
 from a given endpoint appears bot-like (e.g., is high volume, has low latency
 between requests, appears to be retrieving the entire site, etc.) and restrict
 access by those endpoints unless they authenticate and the resulting identity is
-acceptable to the site. <span>[<a href="#I-D.meunier-webbotauth-registry" class="cite xref">I-D.meunier-webbotauth-registry</a>]</span> describes one such
+acceptable to the site. <span>[<a href="#I-D.meunier-webbotauth-httpsig-protocol" class="cite xref">I-D.meunier-webbotauth-httpsig-protocol</a>]</span> describes one such
 architecture, where identities are rooted in the DNS and bots use digital
 signatures to tie their activity to a given identity.<a href="#section-1-6" class="pilcrow">¶</a></p>
 <p id="section-1-7">While directly identifying each bot allows the site to precisely
@@ -1398,7 +1398,7 @@ Request + Endorsement ----------------------------&gt;
 </div>
 <p id="section-2-3">Note: we are borrowing terms here from MoLE <span>[<a href="#I-D.jms-mole-architecture" class="cite xref">I-D.jms-mole-architecture</a>]</span>.<a href="#section-2-3" class="pilcrow">¶</a></p>
 <p id="section-2-4">Prior to contacting the site, Alice and Bob both register with a
-credential Anchor , which is responsible for evaluating
+credential Anchor, which is responsible for evaluating
 whether they comply with the Anchor's policies.
 They each are issued an anonymous credential, which
 they can use to authenticate to the server.  What makes the credential
@@ -2023,9 +2023,9 @@ may not add to the server's ability to address these issues.<a href="#section-8.
         <dd>
 <span class="refAuthor">Davidson, A.</span>, <span class="refAuthor">Finkel, M.</span>, <span class="refAuthor">Thomson, M.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Key Consistency and Discovery"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-privacypass-key-consistency-01</span>, <time datetime="2023-07-10" class="refDate">10 July 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-privacypass-key-consistency-01">https://datatracker.ietf.org/doc/html/draft-ietf-privacypass-key-consistency-01</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="I-D.meunier-webbotauth-registry">[I-D.meunier-webbotauth-registry]</dt>
+<dt id="I-D.meunier-webbotauth-httpsig-protocol">[I-D.meunier-webbotauth-httpsig-protocol]</dt>
         <dd>
-<span class="refAuthor">Guerreiro, M.</span>, <span class="refAuthor">Kirazci, U.</span>, and <span class="refAuthor">T. Meunier</span>, <span class="refTitle">"Registry and Signature Agent card for Web bot auth"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-meunier-webbotauth-registry-03</span>, <time datetime="2026-06-26" class="refDate">26 June 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-meunier-webbotauth-registry-03">https://datatracker.ietf.org/doc/html/draft-meunier-webbotauth-registry-03</a>&gt;</span>. </dd>
+<span class="refAuthor">Meunier, T.</span> and <span class="refAuthor">S. Major</span>, <span class="refTitle">"HTTP Message Signatures for automated traffic"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-meunier-webbotauth-httpsig-protocol-00</span>, <time datetime="2026-06-26" class="refDate">26 June 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-meunier-webbotauth-httpsig-protocol-00">https://datatracker.ietf.org/doc/html/draft-meunier-webbotauth-httpsig-protocol-00</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="I-D.nottingham-webbotauth-use-cases">[I-D.nottingham-webbotauth-use-cases]</dt>
         <dd>

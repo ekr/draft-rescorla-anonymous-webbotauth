@@ -139,9 +139,9 @@ Table of Contents
    is high volume, has low latency between requests, appears to be
    retrieving the entire site, etc.) and restrict access by those
    endpoints unless they authenticate and the resulting identity is
-   acceptable to the site.  [I-D.meunier-webbotauth-registry] describes
-   one such architecture, where identities are rooted in the DNS and
-   bots use digital signatures to tie their activity to a given
+   acceptable to the site.  [I-D.meunier-webbotauth-httpsig-protocol]
+   describes one such architecture, where identities are rooted in the
+   DNS and bots use digital signatures to tie their activity to a given
    identity.
 
    While directly identifying each bot allows the site to precisely
@@ -197,7 +197,7 @@ Table of Contents
    [I-D.jms-mole-architecture].
 
    Prior to contacting the site, Alice and Bob both register with a
-   credential Anchor , which is responsible for evaluating whether they
+   credential Anchor, which is responsible for evaluating whether they
    comply with the Anchor's policies.  They each are issued an anonymous
    credential, which they can use to authenticate to the server.  What
    makes the credential anonymous is that the site only learns that
@@ -668,12 +668,12 @@ Table of Contents
               10 July 2023, <https://datatracker.ietf.org/doc/html/
               draft-ietf-privacypass-key-consistency-01>.
 
-   [I-D.meunier-webbotauth-registry]
-              Guerreiro, M., Kirazci, U., and T. Meunier, "Registry and
-              Signature Agent card for Web bot auth", Work in Progress,
-              Internet-Draft, draft-meunier-webbotauth-registry-03, 26
-              June 2026, <https://datatracker.ietf.org/doc/html/draft-
-              meunier-webbotauth-registry-03>.
+   [I-D.meunier-webbotauth-httpsig-protocol]
+              Meunier, T. and S. Major, "HTTP Message Signatures for
+              automated traffic", Work in Progress, Internet-Draft,
+              draft-meunier-webbotauth-httpsig-protocol-00, 26 June
+              2026, <https://datatracker.ietf.org/doc/html/draft-
+              meunier-webbotauth-httpsig-protocol-00>.
 
    [I-D.nottingham-webbotauth-use-cases]
               Nottingham, M., "Use Cases for Authentication of Web
