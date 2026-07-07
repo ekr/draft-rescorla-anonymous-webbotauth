@@ -225,11 +225,10 @@ TODO
 ## Anchor Hiding
 
 Conversely, in some cases, it is desirable to conceal which of a set
-of Anchors issued a credential. As a concrete example, the IETF
-PrivacyPass WG is designing anonymous credentials that can be issued
+of Anchors issued a credential. As a concrete example, the W3C Anti-Fraud CG is designing anonymous credentials that can be issued
 to individuals indicating that they have passed some set of checks
 indicating that they represent a human. As discussed below, it may be
-possible to use the same type of credential for PrivacyPass and for
+possible to use the same type of credential for
 ABA, even if the Anchors for those credentials are different. A site
 which accepts both credentials for users and bots does not necessarily
 need to know which type of user a given request comes from--as long as
