@@ -16,24 +16,25 @@ system that allows Web site operators to distinguish wanted from
 unwanted traffic, while not tying a given request to a specific
 sender. 
     ' name="description">
-<meta content="xml2rfc 3.32.0" name="generator">
+<meta content="xml2rfc 3.34.0" name="generator">
 <meta content="next generation" name="keyword">
 <meta content="unicorn" name="keyword">
 <meta content="sparkling distributed ledger" name="keyword">
 <meta content="draft-rescorla-anonymous-webbotauth-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.32.0
-    Python 3.12.12
-    ConfigArgParse 1.7
+  xml2rfc 3.34.0
+    Python 3.14.5
+    ConfigArgParse 1.7.5
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
-    lxml 6.0.2
-    platformdirs 4.9.4
+    lxml 6.1.1
+    natsort 8.4.0
+    platformdirs 4.10.0
     pycountry 24.6.1
     PyYAML 6.0.3
-    requests 2.32.5
-    wcwidth 0.6.0
+    requests 2.33.1
+    wcwidth 0.8.2
 -->
 <link href="draft-rescorla-anonymous-webbotauth.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -300,16 +301,19 @@ h1, h2, h3, h4, h5, h6 {
   font-size-adjust: 0.5;
   color: var(--title-color);
 }
-h1#title {
-  font-size: 32px;
-  line-height: 40px;
-  clear: both;
-}
-h1#title, h1#rfcnum {
-  margin: 1.5em 0 0.2em;
-}
-h1#rfcnum + h1#title {
-  margin: 0.2em 0;
+h1 {
+  &#title {
+    font-size: 32px;
+    line-height: 40px;
+    clear: both;
+    margin: 1.5em 0 0.2em;
+  }
+  &#rfcnum {
+    margin: 1.5em 0 0.2em;
+    & + h1#title {
+      margin: 0.2em 0;
+    }
+  }
 }
 
 h1, h2, h3 {
@@ -329,10 +333,10 @@ h4, h5, h6 {
 #abstract+p {
   font-size: 18px;
   line-height: 24px;
-}
-#abstract+p code, #abstract+p samp, #abstract+p tt {
-  font-size: 16px;
-  line-height: 0;
+  & code, & samp, & tt {
+    font-size: 16px;
+    line-height: 0;
+  }
 }
 
 p {
@@ -343,59 +347,59 @@ p {
 div {
   margin: 0;
 }
-.alignRight.art-text {
-  background-color: var(--highlight-color);
-  border: 1px solid var(--line-color);
-  border-radius: 3px;
-  padding: 0.5em 1em 0;
-  margin-bottom: 0.5em;
-}
-.alignRight.art-text pre {
-  padding: 0;
-  width: auto;
-}
 .alignRight {
   margin: 1em 0;
-}
-.alignRight > *:first-child {
-  border: none;
-  margin: 0;
-  float: right;
-  clear: both;
-}
-.alignRight > *:nth-child(2) {
-  clear: both;
-  display: block;
-  border: none;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    margin: 0;
+    float: right;
+    clear: both;
+  }
+  & > *:nth-child(2) {
+    clear: both;
+    display: block;
+    border: none;
+  }
 }
 svg {
   display: block;
-}
-/* font-family isn't space-separated, but =~ will have to do */
-svg[font-family~="monospace" i], svg [font-family~="monospace" i] {
-  font-family: var(--font-mono);
-}
-.alignCenter.art-text {
-  background-color: var(--highlight-color);
-  border: 1px solid var(--line-color);
-  border-radius: 3px;
-  padding: 0.5em 1em 0;
-  margin-bottom: 0.5em;
-}
-.alignCenter.art-text pre {
-  padding: 0;
-  width: auto;
+  /* font-family isn't space-separated, but =~ will have to do */
+  &[font-family~="monospace" i], & [font-family~="monospace" i] {
+    font-family: var(--font-mono);
+  }
 }
 .alignCenter {
   margin: 1em 0;
-}
-.alignCenter > *:first-child {
-  border: none;
-  /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
-     support flexbox yet.
-  */
-  display: table;
-  margin: 0 auto;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+       support flexbox yet.
+    */
+    display: table;
+    margin: 0 auto;
+  }
 }
 
 /* lists */
@@ -433,26 +437,25 @@ dl {
     --indent: 5ch;
     & > dt {
       min-width: calc(var(--indent) - 2ch);
+      float: none;
     }
-  }
-  &.olPercent > dt {
-    float: none;
   }
 
   dl > dd > & {
     margin-top: 0.5em;
     margin-bottom: 0;
   }
-}
-dl:not(.dlNewline) > dt {
-  float: left;
-  margin-right: 2ch;
-  min-width: 8ch;
-}
-dl > dd {
-  margin-bottom: .8em;
-  margin-left: var(--indent) !important; /* stupid element overrides */
-  min-height: 2ex;
+
+  &:not(.dlNewline) > dt {
+    float: left;
+    margin-right: 2ch;
+    min-width: 8ch;
+  }
+  & > dd {
+    margin-bottom: .8em;
+    margin-left: var(--indent) !important; /* stupid element overrides */
+    min-height: 2ex;
+  }
 }
 :is(dl.compact, .dlCompact) > dd {
   margin-bottom: 0;
@@ -468,20 +471,22 @@ dl > dd {
 }
 
 /* links */
-a, a[href].selfRef:hover {
+a {
   text-decoration: none;
+  &[href] {
+    color: var(--link-color);
+    &:hover { text-decoration: underline; }
+    &.selfRef {
+      color: var(--text-color);
+      &:hover {
+        text-decoration: none;
+        background-color: var(--highlight-color);
+      }
+    }
+  }
 }
-a[href] {
-  color: var(--link-color);
-}
-a[href].selfRef, .iref + a[href].internal {
+.iref + a[href].internal {
   color: var(--text-color);
-}
-a[href]:hover {
-  text-decoration: underline;
-}
-a[href].selfRef:hover {
-  background-color: var(--highlight-color);
 }
 a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
   white-space: nowrap;
@@ -517,9 +522,9 @@ img {
 figure {
   margin: 0.5em 0;
   padding: 0;
-}
-figure blockquote {
-  margin: 0.8em 0.4em 0.4em;
+  & blockquote {
+    margin: 0.8em 0.4em 0.4em;
+  }
 }
 figcaption, caption {
   font-style: italic;
@@ -529,17 +534,19 @@ figcaption, caption {
 }
 @media screen {
   /* Auto-collapse boilerplate. */
-  :is(#status-of-memo, #copyright) p {
-    margin: -2px 0;
-    max-height: 0;
-    transition: max-height 2s ease, margin 0.5s ease 0.5s;
-    overflow: hidden;
-  }
-  :is(#status-of-memo, #copyright):hover p,
-  :is(#status-of-memo, #copyright) h2:target ~ p {
-    margin: 0.5em 0;
-    max-height: 500px;
-    overflow: auto;
+  :is(#status-of-memo, #copyright) {
+    & p {
+      margin: -2px 0;
+      max-height: 0;
+      transition: max-height 2s ease, margin 0.5s ease 0.5s;
+      overflow: hidden;
+    }
+    &:hover p,
+    & h2:target ~ p {
+      margin: 0.5em 0;
+      max-height: 500px;
+      overflow: auto;
+    }
   }
   pre, svg {
     display: inline-block;
@@ -589,25 +596,17 @@ table {
   max-width: 100%;
   margin: 0 0 1em;
   border-collapse: collapse;
-}
-table.right {
-  margin-left: auto;
-}
-table.center {
-  margin-left: auto;
-  margin-right: auto;
-}
-table.left {
-  margin-right: auto;
-}
-table .text-left {
-  text-align: left;
-}
-table .text-center {
-  text-align: center;
-}
-table .text-right {
-  text-align: right;
+  &.right { margin-left: auto; }
+  &.center { margin-left: auto; margin-right: auto; }
+  &.left { margin-right: auto; }
+  & .text-left { text-align: left; }
+  & .text-center { text-align: center; }
+  & .text-right { text-align: right; }
+  & caption {
+    margin: 0;
+    padding: 3px 0 3px 1em;
+  }
+  & p { margin: 0; }
 }
 
 thead, tbody {
@@ -627,13 +626,6 @@ th {
 :is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
   background-color: var(--highlight-color);
 }
-table caption {
-  margin: 0;
-  padding: 3px 0 3px 1em;
-}
-table p {
-  margin: 0;
-}
 
 /* pilcrow */
 a.pilcrow {
@@ -644,18 +636,16 @@ a.pilcrow {
     color: var(--pilcrow-weak);
     &:hover { text-decoration: none; }
   }
-}
-@media not print {
-  :hover > a.pilcrow, a.pilcrow:focus {
-    opacity: 1;
+  @media not print {
+    :hover > &, &:focus {
+      opacity: 1;
+    }
+    &[href]:hover {
+      color: var(--pilcrow-strong);
+      background-color: transparent;
+    }
   }
-  a.pilcrow[href]:hover {
-    color: var(--pilcrow-strong);
-    background-color: transparent;
-  }
-}
-@media print {
-  a.pilcrow {
+  @media print {
     display: none;
   }
 }
@@ -714,9 +704,9 @@ sub, sup {
   font-size: 0.9em;
   font-style: italic;
   margin-top: 2em;
-}
-.docInfo .prepared {
-  float: right;
+  & .prepared {
+    float: right;
+  }
 }
 
 /* table of contents */
@@ -806,23 +796,27 @@ hr.addr {
   max-width: calc(100% - 16px);
 }
 @media (min-width: 500px) {
-  #authors-addresses > section {
-    column-count: 2;
-    column-gap: 20px;
-  }
-  #authors-addresses > section > h2 {
-    column-span: all;
-  }
-  /* hack for break-inside: avoid-column */
-  #authors-addresses address {
-    display: inline-block;
-    break-inside: avoid-column;
+  #authors-addresses {
+    & > section {
+      column-count: 2;
+      column-gap: 20px;
+    }
+    & > section > h2 {
+      column-span: all;
+    }
+    /* hack for break-inside: avoid-column */
+    & address {
+      display: inline-block;
+      break-inside: avoid-column;
+    }
   }
 }
 
 /* Comments */
-.rfcEditorRemove p:first-of-type {
-  font-style: italic;
+.rfcEditorRemove {
+  & p:first-of-type {
+    font-style: italic;
+  }
 }
 .cref {
   background-color: rgba(249, 232, 105, 0.3);
@@ -833,19 +827,21 @@ hr.addr {
 }
 
 @media screen {
-  #toc nav {
-    font-family: var(--font-title);
-    font-weight: 360;
-    & > ul { margin-bottom: 2em; }
-    & ul {
-      margin: 0 0 0 4px;
-      & :is(p, li) {
-        margin: 2px 0;
+  #toc {
+    & nav {
+      font-family: var(--font-title);
+      font-weight: 360;
+      & > ul { margin-bottom: 2em; }
+      & ul {
+        margin: 0 0 0 4px;
+        & :is(p, li) {
+          margin: 2px 0;
+        }
       }
     }
-  }
-  #toc a.toplink {
-    float: right;
+    & a.toplink {
+      float: right;
+    }
   }
 }
 @media not screen {
@@ -866,54 +862,54 @@ hr.addr {
     margin: 0;
     border-bottom: 1px solid #ccc;
     opacity: 0.6;
-  }
-  #toc h2 {
-    margin: 0;
-    padding: 2px 0 2px 6px;
-    padding-right: 1em;
-    font-size: 18px;
-    line-height: 24px;
-    min-width: 190px;
-    text-align: right;
-    background-color: #444;
-    color: white;
-    cursor: pointer;
-    &::before { /* css hamburger */
-      float: right;
-      position: relative;
-      width: 1em;
-      height: 1px;
-      left: -164px;
-      margin: 8px 0 0 0;
-      background: white none repeat scroll 0 0;
-      box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
-      content: "";
+    & h2 {
+      margin: 0;
+      padding: 2px 0 2px 6px;
+      padding-right: 1em;
+      font-size: 18px;
+      line-height: 24px;
+      min-width: 190px;
+      text-align: right;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+      &::before { /* css hamburger */
+        float: right;
+        position: relative;
+        width: 1em;
+        height: 1px;
+        left: -164px;
+        margin: 8px 0 0 0;
+        background: white none repeat scroll 0 0;
+        box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+        content: "";
+      }
     }
-  }
-  #toc nav {
-    display: none;
-    background-color: var(--background-color);
-    padding: 0.5em 1em 1em;
-    overflow: auto;
-    overscroll-behavior: contain;
-    height: calc(100vh - 48px);
-    border-left: 1px solid #ddd;
-  }
-  #toc.active {
-    opacity: 1;
-    & nav { display: block; }
-  }
-  /* Make the collapsed ToC header render white on gray also when it's a link */
-  #toc h2 a,
-  #toc h2 a:is(:link, :focus, :hover),
-  #toc a.toplink,
-  #toc a.toplink:hover {
-    color: white;
-    background-color: #444;
-    text-decoration: none;
-  }
-  #toc a.toplink {
-    margin: 2px 0.5em 0;
+    & nav {
+      display: none;
+      background-color: var(--background-color);
+      padding: 0.5em 1em 1em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      height: calc(100vh - 48px);
+      border-left: 1px solid #ddd;
+    }
+    &.active {
+      opacity: 1;
+      & nav { display: block; }
+    }
+    /* Make the collapsed ToC header render white on gray also when it's a link */
+    & h2 a,
+    & h2 a:is(:link, :focus, :hover),
+    & a.toplink,
+    & a.toplink:hover {
+      color: white;
+      background-color: #444;
+      text-decoration: none;
+    }
+    & a.toplink {
+      margin: 2px 0.5em 0;
+    }
   }
 }
 
@@ -932,26 +928,26 @@ hr.addr {
     margin: 0;
     padding: 0;
     z-index: 1;
-  }
-  #toc h2 {
-    margin: 0;
-    padding: 0.25em 1em 1em 0;
-  }
-  #toc nav {
-    display: block;
-    height: calc(90vh - 84px);
-    bottom: 0;
-    padding: 0.5em 0 2em;
-    overflow: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
+    & h2 {
+      margin: 0;
+      padding: 0.25em 1em 1em 0;
+    }
+    & nav {
+      display: block;
+      height: calc(90vh - 84px);
+      bottom: 0;
+      padding: 0.5em 0 2em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+    & a.toplink {
+      margin: 8px 0.5em 0;
+    }
   }
   img { /* future proofing */
     max-width: 100%;
     height: auto;
-  }
-  #toc a.toplink {
-    margin: 8px 0.5em 0;
   }
 }
 
@@ -967,12 +963,13 @@ hr.addr {
   #n-copyright-notice {
     border-bottom: none;
   }
-  #toc, #n-introduction {
-    page-break-before: always;
-  }
   #toc {
+    page-break-before: always;
     border-top: none;
     padding-top: 0;
+  }
+  #n-introduction {
+    page-break-before: always;
   }
   figure, pre, .vcard {
     page-break-inside: avoid;
@@ -1034,17 +1031,19 @@ hr.addr {
 }
 
 /* SVG Trick: a prefix match works because only black and white are allowed */
-svg :is([stroke="black"], [stroke^="#000"]) {
-  stroke: var(--text-color);
-}
-svg :is([stroke="white"], [stroke^="#fff"]) {
-  stroke: var(--background-color);
-}
-svg :is([fill="black"], [fill^="#000"], :not([fill])) {
-  fill: var(--text-color);
-}
-svg :is([fill="white"], [fill^="#fff"]) {
-  fill: var(--background-color);
+svg {
+  & :is([stroke="black"], [stroke^="#000"]) {
+    stroke: var(--text-color);
+  }
+  & :is([stroke="white"], [stroke^="#fff"]) {
+    stroke: var(--background-color);
+  }
+  & :is([fill="black"], [fill^="#000"], :not([fill])) {
+    fill: var(--text-color);
+  }
+  & :is([fill="white"], [fill^="#fff"]) {
+    fill: var(--background-color);
+  }
 }
 </style>
 
@@ -1054,11 +1053,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">Anonymous Bot Authentication</td>
-<td class="right">April 2026</td>
+<td class="right">July 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Rescorla &amp; Barnes</td>
-<td class="center">Expires 10 October 2026</td>
+<td class="center">Expires 8 January 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1071,12 +1070,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-rescorla-anonymous-webbotauth-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-04-08" class="published">8 April 2026</time>
+<time datetime="2026-07-07" class="published">7 July 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-10-10">10 October 2026</time></dd>
+<dd class="expires"><time datetime="2027-01-08">8 January 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1131,7 +1130,7 @@ sender.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 10 October 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 8 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1175,10 +1174,10 @@ sender.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-concrete-implementation-wit" class="internal xref">Concrete Implementation With Privacy Pass and ARC</a></p>
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-concrete-implementation-wit" class="internal xref">Concrete Implementation With MoLE</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
-                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-providing-attestation-to-th" class="internal xref">Providing Attestation to the Issuer</a></p>
+                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-providing-endorsement-to-th" class="internal xref">Providing Endorsement to the Moderator</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
                 <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-alternate-cryptographic-app" class="internal xref">Alternate Cryptographic Approaches</a></p>
@@ -1187,7 +1186,7 @@ sender.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
                     <p id="section-toc.1-1.3.2.2.2.1.1"><a href="#section-3.2.1" class="auto internal xref">3.2.1</a>.  <a href="#name-only-generic-zero-knowledge" class="internal xref">Only Generic Zero-Knowledge Proofs</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2.2.2">
-                    <p id="section-toc.1-1.3.2.2.2.2.1"><a href="#section-3.2.2" class="auto internal xref">3.2.2</a>.  <a href="#name-other-attestation-structure" class="internal xref">Other Attestation Structures</a></p>
+                    <p id="section-toc.1-1.3.2.2.2.2.1"><a href="#section-3.2.2" class="auto internal xref">3.2.2</a>.  <a href="#name-other-endorsement-structure" class="internal xref">Other Endorsement Structures</a></p>
 </li>
                 </ul>
 </li>
@@ -1197,13 +1196,13 @@ sender.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
             <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-issuance-models" class="internal xref">Issuance Models</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
-                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-independent-attesters" class="internal xref">Independent Attesters</a></p>
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-independent-anchors" class="internal xref">Independent Anchors</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
-                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-server-as-attester" class="internal xref">Server as Attester</a></p>
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-server-as-anchor" class="internal xref">Server as Anchor</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
-                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-number-of-attesters" class="internal xref">Number of Attesters</a></p>
+                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-number-of-anchors" class="internal xref">Number of Anchors</a></p>
 </li>
             </ul>
 </li>
@@ -1380,15 +1379,15 @@ we describe the trade-offs between anonymity and fine-grained abuse mitigation.<
 <figure id="figure-1">
         <div class="alignLeft art-text artwork" id="section-2-2.1">
 <pre>
-Alice         Bob           Attester             Site
+Alice         Bob           Anchor             Site
 
 Register ---------------------&gt;
-&lt;----------- Attestation[Alice]
+&lt;----------- Endorsement[Alice]
               Register -------&gt;
-         &lt;---- Attestation[Bob]
+         &lt;---- Endorsement[Bob]
 
-Request + Attestation ----------------------------&gt;
-                           Site only knows Attester
+Request + Endorsement ----------------------------&gt;
+                             Site only knows Anchor
                                    not Alice or Bob
 &lt;------------------------------------------Response
 </pre>
@@ -1397,26 +1396,27 @@ Request + Attestation ----------------------------&gt;
 <a href="#name-architectural-overview-2" class="selfRef">Architectural Overview</a>
         </figcaption></figure>
 </div>
-<p id="section-2-3">Prior to contacting the site, Alice and Bob both register with a
-credential Attester, which is responsible for evaluating
-whether they comply with the Attester's policies.
+<p id="section-2-3">Note: we are borrowing terms here from MoLE <span>[<a href="#I-D.jms-mole-architecture" class="cite xref">I-D.jms-mole-architecture</a>]</span>.<a href="#section-2-3" class="pilcrow">¶</a></p>
+<p id="section-2-4">Prior to contacting the site, Alice and Bob both register with a
+credential Anchor , which is responsible for evaluating
+whether they comply with the Anchor's policies.
 They each are issued an anonymous credential, which
 they can use to authenticate to the server.  What makes the credential
 anonymous is that the site only learns that someone with a credential
-from the Attester is authenticating, not whether it's Alice or Bob. This
+from the Anchor is authenticating, not whether it's Alice or Bob. This
 prevents the site from discriminating <em>between</em> customers of the
-same attester, although it can discriminate between attesters.<a href="#section-2-3" class="pilcrow">¶</a></p>
-<p id="section-2-4">As a result, while it is possible to distinguish authenticated from
+same anchor, although it can discriminate between anchors.<a href="#section-2-4" class="pilcrow">¶</a></p>
+<p id="section-2-5">As a result, while it is possible to distinguish authenticated from
 unauthenticated bots, it is not possible to use the authentication
 method to either (1) selectively block individual bots(2)
 determine which bots are accessing which resources or (3) link
 multiple visits by the same bot. It may still be
 possible to identify bots via other mechanisms such as IP address or
-fingerprinting.<a href="#section-2-4" class="pilcrow">¶</a></p>
-<p id="section-2-5">In some cases it may be sufficient merely to identify the attester, for
-instance if the attester performs some vetting to ensure policy
+fingerprinting.<a href="#section-2-5" class="pilcrow">¶</a></p>
+<p id="section-2-6">In some cases it may be sufficient merely to identify the anchor, for
+instance if the anchor performs some vetting to ensure policy
 compliance. However, in some cases this may be insufficient, as
-discussed below.<a href="#section-2-5" class="pilcrow">¶</a></p>
+discussed below.<a href="#section-2-6" class="pilcrow">¶</a></p>
 <div id="trade-offs">
 <section id="section-2.1">
         <h3 id="name-trade-offs">
@@ -1478,176 +1478,145 @@ party are incompatible with anonymous authentication.<a href="#section-2.1-3" cl
 <a href="#section-2.2" class="section-number selfRef">2.2. </a><a href="#name-rate-limiting" class="section-name selfRef">Rate Limiting</a>
         </h3>
 <p id="section-2.2-1">In some cases it may be desirable to limit any individual agent to a
-specific number of requests. For example, a given Attester may have a
+specific number of requests. For example, a given Anchor may have a
 large number of subscribers but only a few may access a given site. In
-this case, overall rate limits for an attester will not be effective,
+this case, overall rate limits for an anchor will not be effective,
 but individual rate limits are.<a href="#section-2.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
 </div>
-<div id="concrete-implementation-with-privacy-pass-and-arc">
+<div id="concrete-implementation-with-mole">
 <section id="section-3">
       <h2 id="name-concrete-implementation-wit">
-<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-concrete-implementation-wit" class="section-name selfRef">Concrete Implementation With Privacy Pass and ARC</a>
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-concrete-implementation-wit" class="section-name selfRef">Concrete Implementation With MoLE</a>
       </h2>
-<p id="section-3-1">This section describes how to implement ABA using Privacy Pass <span>[<a href="#RFC9576" class="cite xref">RFC9576</a>]</span>, and
-Anonymous Rate-Limited Credentials
-<span>[<a href="#I-D.ietf-privacypass-arc-protocol" class="cite xref">I-D.ietf-privacypass-arc-protocol</a>]</span> <span>[<a href="#I-D.ietf-privacypass-arc-crypto" class="cite xref">I-D.ietf-privacypass-arc-crypto</a>]</span>. While this
-is not the only possible implementation approach, it leverages existing
-deployed and proposed IETF technologies and thus avoids duplicated
-functionality and fits well into existing deployments.<a href="#section-3-1" class="pilcrow">¶</a></p>
-<p id="section-3-2">We make use of the "Joint Origin and Issuer Deployment Model" from
-<span><a href="https://rfc-editor.org/rfc/rfc9576#section-4.3" class="relref">Section 4.3</a> of [<a href="#RFC9576" class="cite xref">RFC9576</a>]</span>, reproduced below in
-<a href="#fig-privacy-pass-model" class="auto internal xref">Figure 2</a>:<a href="#section-3-2" class="pilcrow">¶</a></p>
-<span id="name-privacy-pass-model-joint-or"></span><div id="fig-privacy-pass-model">
+<p id="section-3-1">This section describes how to implement ABA using mechanisms from MoLE
+<span>[<a href="#I-D.jms-mole-architecture" class="cite xref">I-D.jms-mole-architecture</a>]</span>. The MoLE architecture has three
+entities, as shown in <a href="#fig-mole-model" class="auto internal xref">Figure 2</a>, reproduced from Section 4
+of <span>[<a href="#I-D.jms-mole-architecture" class="cite xref">I-D.jms-mole-architecture</a>]</span>.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<span id="name-mole-architecture"></span><div id="fig-mole-model">
 <figure id="figure-2">
-        <div class="alignLeft art-text artwork" id="section-3-3.1">
+        <div class="alignLeft art-text artwork" id="section-3-2.1">
 <pre>
-                                     +----------------------------.
-   +--------+          +----------+  |  +--------+     +--------+  |
-   | Client |          | Attester |  |  | Issuer |     | Origin |  |
-   +---+----+          +-----+----+  |  +----+---+     +---+----+  |
-       |                     |        `------|-------------|------'
-       |&lt;-------------------------------- TokenChallenge --+
-       |                     |               |             |
-       |&lt;=== Attestation ===&gt;|               |             |
-       |                     |               |             |
-       +------------ TokenRequest ----------&gt;|             |
-       |&lt;---------- TokenResponse -----------+             |
-       |                                                   |
-       +--------------------- Token -----------------------&gt;
-       |                                                   |
+   +--------+            +--------+              +-----------+
+   | Anchor |            | Client |              | Moderator |
+   +---+----+            +---+----+              +-----+-----+
+       |                     |                         |
+       |&lt;~~~ Interaction ~~~&gt;|                         |
+       |                     |                         |
+       +==== Endorsement ===&gt;|                         |
+       |                     |                         |
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+       |                     |                         |
+       |                     |&lt;~~~~~ Interaction ~~~~~&gt;|
+       |                     |                         |
+       |                +---- (If needed) -----------------.
+       |                |    |                         |    |
+       |                |    +------ Endorsement -----&gt;|    |
+       |                |    |                         |    |
+       |                |    |&lt;----- Credential -------+    |
+       |                |    |                         |    |
+       |                 `---------------------------------'
+       |                     |                         |
+       |                     +====== Presentation ====&gt;|
+       |                     |                         |
 </pre>
 </div>
 <figcaption><a href="#figure-2" class="selfRef">Figure 2</a>:
-<a href="#name-privacy-pass-model-joint-or" class="selfRef">Privacy Pass Model (Joint Origin and Issuer)</a>
+<a href="#name-mole-architecture" class="selfRef">MoLE Architecture</a>
         </figcaption></figure>
 </div>
-<p id="section-3-4">In this model, the Client interacts with an Attester, which is
+<p id="section-3-3">In this model, the Client interacts with an Anchor, which is
 responsible for determining whether the client conforms to the
-required policy. The Attester provides an Attestation which can then
-be presented to the site (the Issuer in the diagram above), which
-provides a Token.  The bot can then use the Token to get services from
-the site (the Origin in the diagram above). The Issuer and the Origin
-are operated by the same entity (this is a technical constraint of
-ARC).<a href="#section-3-4" class="pilcrow">¶</a></p>
-<p id="section-3-5">ABA extends this scheme with a zero-knowledge proof (ZKP) system (e.g.,
-<span>[<a href="#I-D.google-cfrg-libzk" class="cite xref">I-D.google-cfrg-libzk</a>]</span>) in order to assure that the Attester's attestation
-does not leak information to the Issuer that could deanonymize the Client.  This
-property is especially important in the "server as attester" case
-<a href="#server-as-attester" class="auto internal xref">Section 4.2</a>, and is not assured by ARC itself.  In effect, ABA uses
-an expensive attestion and ZKP operation to authorize the issuance of ARC tokens
-that can be used cheaply on every request.<a href="#section-3-5" class="pilcrow">¶</a></p>
-<span id="name-aba-with-privacy-pass"></span><div id="fig-aba-with-privacy-pass">
-<figure id="figure-3">
-        <div class="alignLeft art-text artwork" id="section-3-6.1">
-<pre>
-                                     +----------------------------.
-   +--------+          +----------+  |  +--------+     +--------+  |
-   | Client |          | Attester |  |  | Issuer |     | Origin |  |
-   +---+----+          +-----+----+  |  +----+---+     +---+----+  |
-       |                     |        `------|-------------|------'
-       |                     |               |             |
-       +---- Cred-Request---&gt;|               |             |
-       |&lt;---Attestation------+               |             |
-       |                     |               |             |
-
-                             [Later]
-
-       |&lt;-------------------------------- TokenChallenge --+
-       |                     |               |             |
-       +---TokenRequest + ZKP(Attestation)--&gt;|             |
-       |&lt;--TokenResponse[ARC Credential]-----+             |
-       |                                                   |
-       +---------------- Request + ARC Credential --------&gt;|
-</pre>
-</div>
-<figcaption><a href="#figure-3" class="selfRef">Figure 3</a>:
-<a href="#name-aba-with-privacy-pass" class="selfRef">ABA with Privacy Pass</a>
-        </figcaption></figure>
-</div>
-<p id="section-3-7">When a new Client is deployed, it first must register with some set
-of Attesters. These Attesters will require the bot to demonstrate
-that it complies with their policies, for instance that it is a
-registered corporation, holds a domain name or an IP address block,
-etc. Once the Attester is satisfied, it issues a Attestation to
-the Client in the form of a CWT <span>[<a href="#RFC8392" class="cite xref">RFC8392</a>]</span> signed by the Attester. This
-Attestation can be used to authenticate to an arbitrary number of Issuers.<a href="#section-3-7" class="pilcrow">¶</a></p>
-<p id="section-3-8">When a client contacts a new site for which it does not yet
-have an ARC Credential, client uses the Attestation to authenticate
-to the Issuer and request an ARC Credential. This authentication is
+required policy. The Anchor provides an Endorsement which can then
+be redeemed by the client with the Moderator for a Credential, which
+can then be presentated to Moderator at a future time in order
+to provide anonymous authentication. The Moderator can be
+operated directly by the site/origin or can be separate from the
+site but cooperating with it.<a href="#section-3-3" class="pilcrow">¶</a></p>
+<p id="section-3-4">MoLE supports a number of different types of Endorsement
+and Credential. For concreteness, this document describes the
+use of Longfellow-based Endorsements and ACT-based Credentials
+(Sections 4.2 and 5.1 of <span>[<a href="#I-D.jms-mole-protocols" class="cite xref">I-D.jms-mole-protocols</a>]</span> respectively).
+Other Endorsement and Credentials may have somewhat different
+operational properties, and are covered briefly in <a href="#other-endorsement-structures" class="auto internal xref">Section 3.2.2</a>.<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-5">When a new Client is deployed, it first must register with some set of
+Anchors. These Anchors will require the bot to demonstrate that it
+complies with their policies, for instance that it is a registered
+corporation, holds a domain name or an IP address block, etc.
+Once the Anchor is satisfied, it issues a Endorsement to
+the Client in the form of a CWT <span>[<a href="#RFC8392" class="cite xref">RFC8392</a>]</span> signed by the Anchor. This
+Endorsement can be used to authenticate to an arbitrary number of Moderators.<a href="#section-3-5" class="pilcrow">¶</a></p>
+<p id="section-3-6">When a client contacts a new site for which it does not yet
+have a Credential, the client uses the Endorsement to authenticate
+to the Moderator and request a Credential. This authentication is
 performed anonymously using a zero-knowledge proof that it has
-a valid Attestation (shown as "ZKP(Attestation)" above), as described
-in <a href="#auth-issuer" class="auto internal xref">Section 3.1</a>, so that the Issuer only learns the following
-information:<a href="#section-3-8" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-3-9">
-<li id="section-3-9.1">
-          <p id="section-3-9.1.1">This Client has been authenticated by the Attester.<a href="#section-3-9.1.1" class="pilcrow">¶</a></p>
+a valid Endorsement  so that the Moderator only learns the following
+information:<a href="#section-3-6" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-3-7">
+<li id="section-3-7.1">
+          <p id="section-3-7.1.1">This Client has been authenticated by the Anchor.<a href="#section-3-7.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-3-9.2">
-          <p id="section-3-9.2.1">This Client has not authenticated to the Issuer previously
-using this Attestation (potentially within a given time window).<a href="#section-3-9.2.1" class="pilcrow">¶</a></p>
+        <li id="section-3-7.2">
+          <p id="section-3-7.2.1">This Client has not authenticated to the Moderator previously
+using this Endorsement within a given time window.<a href="#section-3-7.2.1" class="pilcrow">¶</a></p>
 </li>
       </ol>
-<p id="section-3-10">Assuming that the Client's proof verifies correctly and the
-Attester is acceptable, the Issuer issues an ARC credential.<a href="#section-3-10" class="pilcrow">¶</a></p>
-<p id="section-3-11">Each credential is associated with a rate limit, which may
-be Attester-dependent. For instance, if the Attester has a policy designed for high
-traffic bots, the Issuer might use one rate limit, whereas if the
-policy is designed for low traffic bots, the Issuer might use a lower
-rate limit. Note that the choice of rate limit is entirely up to the
-Issuer, but because all Clients authenticated by a given Attester are
+<p id="section-3-8">Assuming that the Client's proof verifies correctly and the Anchor is
+acceptable, the Moderator issues a Credential. Each credential is
+associated with a usage limit, which may be Anchor-dependent. For
+instance, if the Anchor has a policy designed for high traffic bots,
+the Moderator might use usage rate limit, whereas if the policy is
+designed for low traffic bots, the Moderator might use a lower usage
+limit. Note that the choice of usage limit is entirely up to the
+Moderator, but because all Clients authenticated by a given Anchor are
 within the same anonymity set, it cannot use different per-Client
-rate limits to multiple Clients attested to by the same Attester. Similarly,
-because all clients whose credentials are associated with the Issuer's
-key pair, all authorizations by Clients using the<a href="#section-3-11" class="pilcrow">¶</a></p>
-<p id="section-3-12">Once the Client has an ARC credential it can use it to authenticate
-to the Origin repeatedly up to the number of authentications
-in the rate limit associated with the Credential. These authentications
-are unlinkable provided that the Client does not exceed the rate
-limit; authentications beyond the rate limit are linkable.
-Because any Credential can only be used once for a given
-Issuer within a given time window, the total rate limit for a given Client/Issuer pair
-is bounded by the limit associated with the ARC credential.<a href="#section-3-12" class="pilcrow">¶</a></p>
-<div id="auth-issuer">
+usage limits to multiple Clients attested to by the same Anchor.<a href="#section-3-8" class="pilcrow">¶</a></p>
+<p id="section-3-9">Once the Client has a Credential it can use it to authenticate
+to the Moderator repeatedly.<a href="#section-3-9" class="pilcrow">¶</a></p>
+<div id="auth-Moderator">
 <section id="section-3.1">
-        <h3 id="name-providing-attestation-to-th">
-<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-providing-attestation-to-th" class="section-name selfRef">Providing Attestation to the Issuer</a>
+        <h3 id="name-providing-endorsement-to-th">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-providing-endorsement-to-th" class="section-name selfRef">Providing Endorsement to the Moderator</a>
         </h3>
-<p id="section-3.1-1">The protocol for Attestation to the Issuer is designed to meet
+<p id="section-3.1-1">The protocol for Endorsement to the Moderator is designed to meet
 the following requirements:<a href="#section-3.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-3.1-2.1">
-            <p id="section-3.1-2.1.1">A Attestation can be used with an arbitrary number of Issuers.<a href="#section-3.1-2.1.1" class="pilcrow">¶</a></p>
+            <p id="section-3.1-2.1.1">A Endorsement can be used with an arbitrary number of Moderators.<a href="#section-3.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-3.1-2.2">
-            <p id="section-3.1-2.2.1">A Attestation can only be used once with a single Issuer within
+            <p id="section-3.1-2.2.1">A Endorsement can only be used once with a single Moderator within
 a given time window<a href="#section-3.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-3.1-2.3">
-            <p id="section-3.1-2.3.1">Attestation presentations are unlinkable, both between
-Issuer and Attester and between Issuers.<a href="#section-3.1-2.3.1" class="pilcrow">¶</a></p>
+            <p id="section-3.1-2.3.1">Endorsement presentations are unlinkable, both between
+Moderator and Anchor and between Moderators.<a href="#section-3.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-3.1-3">These requirements can be met by using a signed credential (in this
 case, a CWT <span>[<a href="#RFC8392" class="cite xref">RFC8392</a>]</span>), along with a generic circuit-based
 zero-knowledge proof system (in this case Longfellow-ZK
-<span>[<a href="#I-D.google-cfrg-libzk" class="cite xref">I-D.google-cfrg-libzk</a>]</span>).  The interaction between the Attester and
+<span>[<a href="#I-D.google-cfrg-libzk" class="cite xref">I-D.google-cfrg-libzk</a>]</span>).  The interaction between the Anchor and
 the Client just yields an ordinary CWT and then the Client proves in
-zero-knowledge that they have a valid Attestation from a given Attester.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
-<p id="section-3.1-4">In order to prevent replay, the proof also includes an Issuer-specific
-nullifier tied to the Issuer's domain name and the current time
+zero-knowledge that they have a valid Endorsement from a given Anchor.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.1-4">In order to prevent replay, the proof also includes an Moderator-specific
+nullifier tied to the Moderator's domain name and the current time
 window. While the proof itself varies between presentations, the
 nullifier remains the same and therefore can be used to detect replay.<a href="#section-3.1-4" class="pilcrow">¶</a></p>
 <p id="section-3.1-5">Because we are using a generic ZK system it should also be
-possible to use it to conceal the  Attester if desired: for
-example if there are multiple Attesters who follow equivalent
-vetting procedures, then the Issuer does not need to know which
-Attester the Client used; the ZKP can be designed to prove
-that the Client has a Attestation from one of a set of Attesters
-within the same equivalence class; of course, the Issuer will
-need to use the same rate limit for all such Attesters.<a href="#section-3.1-5" class="pilcrow">¶</a></p>
+possible to use it to conceal the  Anchor if desired: for
+example if there are multiple Anchors who follow equivalent
+vetting procedures, then the Moderator does not need to know which
+Anchor the Client used; the ZKP can be designed to prove
+that the Client has a Endorsement from one of a set of Anchors
+within the same equivalence class; of course, the Moderator will
+need to use the same usage limit for all such Anchors.<a href="#section-3.1-5" class="pilcrow">¶</a></p>
+<p id="section-3.1-6">Note: The Longfellow nullifier mechanism in MoLE does not appear
+to include the Moderator's identity, thus potentially precluding
+Endorsement reuse.
+[[https://github.com/Moderation-of-unLinkable-Endorsements/internet-drafts/issues/28]]<a href="#section-3.1-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="alternate-cryptographic-approaches">
@@ -1663,49 +1632,31 @@ section.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
           <h4 id="name-only-generic-zero-knowledge">
 <a href="#section-3.2.1" class="section-number selfRef">3.2.1. </a><a href="#name-only-generic-zero-knowledge" class="section-name selfRef">Only Generic Zero-Knowledge Proofs</a>
           </h4>
-<p id="section-3.2.1-1">In principle, it is possible to omit the use of ARC
+<p id="section-3.2.1-1">In principle, it is possible to omit the use of Credentials
 and instead have the Client authenticate each transaction
 directly to the Origin. However, even efficient generic ZKP systems
 like Longfellow-ZK have far higher computational and bandwidth
-costs than more limited systems such as the one used in ARC.
+costs than more limited systems such as Credential mechanisms
+provided in MoLE.
 Using a generic ZKP system to demonstrate ownership of
-an attested Attestation to the Issuer and then using that
-single interaction to obtain an ARC credential makes it possible
+an attested Endorsement to the Moderator and then using that
+single interaction to obtain a Credential makes it possible
 to amortize the generic proof over a large number of subsequent
 interactions.<a href="#section-3.2.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="other-attestation-structures">
+<div id="other-endorsement-structures">
 <section id="section-3.2.2">
-          <h4 id="name-other-attestation-structure">
-<a href="#section-3.2.2" class="section-number selfRef">3.2.2. </a><a href="#name-other-attestation-structure" class="section-name selfRef">Other Attestation Structures</a>
+          <h4 id="name-other-endorsement-structure">
+<a href="#section-3.2.2" class="section-number selfRef">3.2.2. </a><a href="#name-other-endorsement-structure" class="section-name selfRef">Other Endorsement Structures</a>
           </h4>
-<p id="section-3.2.2-1">There are a number of other potential ways to convey attestations
-to the Issuer, but each fails to fulfill one of the requirements
-in <a href="#auth-issuer" class="auto internal xref">Section 3.1</a>.<a href="#section-3.2.2-1" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-3.2.2-2.1">
-              <p id="section-3.2.2-2.1.1"><em>Non-anonymous credentials</em> allow for linkage of bots at redemption
-time.<a href="#section-3.2.2-2.1.1" class="pilcrow">¶</a></p>
-</li>
-            <li class="normal" id="section-3.2.2-2.2">
-              <p id="section-3.2.2-2.2.1"><em>Single-show credentials</em> like those in Privacy Pass either allow or
-require the bot to interact with the Attester for each site it
-wants to interact with (otherwise linkage is possible).<a href="#section-3.2.2-2.2.1" class="pilcrow">¶</a></p>
-</li>
-            <li class="normal" id="section-3.2.2-2.3">
-              <p id="section-3.2.2-2.3.1"><em>Camenisch-Lysanskaya credentials</em> do not prevent multiple shows
-to the same server, thus precluding rate limiting.<a href="#section-3.2.2-2.3.1" class="pilcrow">¶</a></p>
-</li>
-            <li class="normal" id="section-3.2.2-2.4">
-              <p id="section-3.2.2-2.4.1"><em>BBS+</em> credentials require the use of pairings and have no obvious
-transition to post-quantum algorithms.<a href="#section-3.2.2-2.4.1" class="pilcrow">¶</a></p>
-</li>
-          </ul>
-<p id="section-3.2.2-3">Note that in cases where the Attester and the Issuer are one and
-the same (see <a href="#server-as-attester" class="auto internal xref">Section 4.2</a>), it is not necessary to
-convey the attestation to the Issuer and so the generic ZKP
-system can be omitted.<a href="#section-3.2.2-3" class="pilcrow">¶</a></p>
+<p id="section-3.2.2-1">MoLE also includes an Endorsement mechanism called Issuer-Hiding Anonymous
+Token (IHAT). IHAT uses single-show endorsements, so that the Client
+needs to retrieve a new Endorsement for each Moderator. This is more
+computationally efficient than a generic ZKP and allows the Anchor
+to have more tight control of the rate at which the Client makes
+requests, but may be challenging in settings where the bot has to
+contact many sites, as with crawlers.<a href="#section-3.2.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1719,55 +1670,55 @@ system can be omitted.<a href="#section-3.2.2-3" class="pilcrow">¶</a></p>
       </h2>
 <p id="section-4-1">Anonymous credentials are compatible with a variety of issuance
 models, as discussed in this section.<a href="#section-4-1" class="pilcrow">¶</a></p>
-<div id="independent-attesters">
+<div id="independent-anchors">
 <section id="section-4.1">
-        <h3 id="name-independent-attesters">
-<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-independent-attesters" class="section-name selfRef">Independent Attesters</a>
+        <h3 id="name-independent-anchors">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-independent-anchors" class="section-name selfRef">Independent Anchors</a>
         </h3>
 <p id="section-4.1-1">Much like millions of websites rely on a much smaller number of independent
 WebPKI certificate authorities, it is possible to have a system of independent
-Attesters that are broadly relied upon by many websites.  Each attester could
+Anchors that are broadly relied upon by many websites.  Each anchor could
 publish the policy that it uses to issue credentials (e.g., verifying corporate
-existence, subject pays $100, etc.). Sites can then select which attesters have
+existence, subject pays $100, etc.). Sites can then select which anchors have
 policies they are willing to accept. It is also possible to have multiple
-Attesters who conform to a common set of policies, as in the WebPKI, where each
+Anchors who conform to a common set of policies, as in the WebPKI, where each
 CA has to meet the same requirements, but site operators have the choice of
 which CA to use.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="server-as-attester">
+<div id="server-as-anchor">
 <section id="section-4.2">
-        <h3 id="name-server-as-attester">
-<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-server-as-attester" class="section-name selfRef">Server as Attester</a>
+        <h3 id="name-server-as-anchor">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-server-as-anchor" class="section-name selfRef">Server as Anchor</a>
         </h3>
-<p id="section-4.2-1">It is also possible for a server to act as their own Attester. This is
+<p id="section-4.2-1">It is also possible for a server to act as their own Anchor. This is
 not likely to be practical for small sites, as bots will simply opt
 not to authenticate to those sites at all. However, a large CDN which
-hosts many sites might opt to operate its own Attester, and it could
-be practical for bots to register with such an Attester. Note that
-this approach makes it possible for the Attester to refuse
+hosts many sites might opt to operate its own Anchor, and it could
+be practical for bots to register with such an Anchor. Note that
+this approach makes it possible for the Anchor to refuse
 service to individual Clients, but not to selectively do so for
-individual customers unless it uses separate Issuers for each
+individual customers unless it uses separate Moderators for each
 of those customers.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
 <p id="section-4.2-2">The ZKP element of ABA ensures that clients remain anonymous even in this case,
-since the client's redemption of an Attestation is not linkable to its issuance.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+since the client's redemption of an Endorsement is not linkable to its issuance.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="number-of-attesters">
+<div id="number-of-anchors">
 <section id="section-4.3">
-        <h3 id="name-number-of-attesters">
-<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-number-of-attesters" class="section-name selfRef">Number of Attesters</a>
+        <h3 id="name-number-of-anchors">
+<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-number-of-anchors" class="section-name selfRef">Number of Anchors</a>
         </h3>
 <p id="section-4.3-1">In general, it is desirable for bots to be able to acquire
 a relatively small number of credentials and have high confidence that
 those credentials will be compatible with most if not all of the
 sites that the bot wishes to contact. This can be most straightforwardly
-accomplished if there is only a small number of attesters, but it can
-also work if there are a larger number of attesters but sites converge
-on a relatively small number of policies (expressed as which attesters
+accomplished if there is only a small number of anchors, but it can
+also work if there are a larger number of anchors but sites converge
+on a relatively small number of policies (expressed as which anchors
 they support) such that a bot can acquire a set of credentials that
 covers all of those policies. The least desirable outcome is if
-bots routinely are prompted to provide credentials for a new attester.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+bots routinely are prompted to provide credentials for a new anchor.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1782,10 +1733,8 @@ authentication happening in the PrivacyPass WG and in the W3C
 AntiFraud Community Group. While that work is directed towards
 access control for users, the same cryptographic techniques
 can be used to authenticate bots. A good description of
-the vision and requirements can be found at <span>[<a href="#PACT-Issue" class="cite xref">PACT-Issue</a>]</span>.
-The ideal scenario would be to be able to use compatible tokens
-for users and bots, differing only in the issuance policies,
-the attesters, and the rate limits.<a href="#section-5-1" class="pilcrow">¶</a></p>
+the vision and requirements can be found at <span>[<a href="#PACT-Issue" class="cite xref">PACT-Issue</a>]</span>,
+and the MoLE effort that has grown out of it.<a href="#section-5-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="use-case-analysis">
@@ -1850,7 +1799,7 @@ certification by a third party);<a href="#section-6.1.2-2.1.1.3.1" class="pilcro
           </ul>
 <p id="section-6.1.2-3">ABA can be used for the second two use cases and can be used for some
 versions of the first two use cases. However, the more fine-grained
-controls are used (e.g., by having many Attesters with different
+controls are used (e.g., by having many Anchors with different
 policies) the worse the privacy and scalability properties of the
 system become.n<a href="#section-6.1.2-3" class="pilcrow">¶</a></p>
 </section>
@@ -1861,9 +1810,9 @@ system become.n<a href="#section-6.1.2-3" class="pilcrow">¶</a></p>
 <a href="#section-6.1.3" class="section-number selfRef">6.1.3. </a><a href="#name-providing-different-content" class="section-name selfRef">Providing Different Content to Bots</a>
           </h4>
 <p id="section-6.1.3-1">The architecture in this document may be usable to provide different
-content to bots generally than humans depending on the structure of attesters
-(e.g., does a given attester issue to both bots and to humans) and
-whether techniques are used to conceal which attester is in use.
+content to bots generally than humans depending on the structure of anchors
+(e.g., does a given anchor issue to both bots and to humans) and
+whether techniques are used to conceal which anchor is in use.
 However, they are not generally useful to provide different content
 to specific bots.<a href="#section-6.1.3-1" class="pilcrow">¶</a></p>
 </section>
@@ -1908,9 +1857,9 @@ ultimate deployment model.<a href="#section-6.1.5-1" class="pilcrow">¶</a></p>
 <a href="#section-6.2.1" class="section-number selfRef">6.2.1. </a><a href="#name-ip-address-mobility" class="section-name selfRef">IP Address Mobility</a>
           </h4>
 <p id="section-6.2.1-1">ABA provides authentication for bots independent of IP address.
-Because ABA authentication is at the Attester rather than the Client
+Because ABA authentication is at the Anchor rather than the Client
 level, it is not possible to use ABA to build bot-specific reputations
-based on observed bot activity; instead the Attester is responsible
+based on observed bot activity; instead the Anchor is responsible
 for assessing bots and then providing that information to sites.<a href="#section-6.2.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1939,11 +1888,11 @@ users sharing the same IP address.<a href="#section-6.2.2-1" class="pilcrow">¶<
           <h4 id="name-conveying-contextual-inform">
 <a href="#section-6.2.4" class="section-number selfRef">6.2.4. </a><a href="#name-conveying-contextual-inform" class="section-name selfRef">Conveying Contextual Information</a>
           </h4>
-<p id="section-6.2.4-1">Because different Attesters can have different policies and Attesters
+<p id="section-6.2.4-1">Because different Anchors can have different policies and Anchors
 can have multiple policies, ABA allows for limited conveyance of
 contextual information. While in principle this information can
 be arbitrarily fine-grained, coarse-grained information ensures
-a larger anonymity set (see <a href="#number-of-attesters" class="auto internal xref">Section 4.3</a>).<a href="#section-6.2.4-1" class="pilcrow">¶</a></p>
+a larger anonymity set (see <a href="#number-of-anchors" class="auto internal xref">Section 4.3</a>).<a href="#section-6.2.4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1975,12 +1924,12 @@ is possible to make some general observations.<a href="#section-8-1" class="pilc
 <a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-anonymity-set" class="section-name selfRef">Anonymity Set</a>
         </h3>
 <p id="section-8.1-1">The anonymity set for a given transaction is the set of credentials
-associated with a given Attester, or, if Attester hiding is used, the set
-of credentials associated with the set of attesters. However, it is
+associated with a given Anchor, or, if Anchor hiding is used, the set
+of credentials associated with the set of anchors. However, it is
 still possible to learn information about the client by manipulating
-the Attester set. For example, a site acting as an Attester could use
-different keys for each user or a site could use different Attester
-subsets to identify which of a set of Attesters was in use.
+the Anchor set. For example, a site acting as an Anchor could use
+different keys for each user or a site could use different Anchor
+subsets to identify which of a set of Anchors was in use.
 Transparency/consistency mechanisms like
 <span>[<a href="#I-D.ietf-privacypass-key-consistency" class="cite xref">I-D.ietf-privacypass-key-consistency</a>]</span> may be useful in detecting
 this form of attack.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
@@ -2037,13 +1986,13 @@ may not add to the server's ability to address these issues.<a href="#section-8.
         <dd>
 <span class="refAuthor">Frigo, M.</span> and <span class="refAuthor">A. shelat</span>, <span class="refTitle">"The Longfellow Zero-knowledge Scheme"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-google-cfrg-libzk-01</span>, <time datetime="2025-09-02" class="refDate">2 September 2025</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-google-cfrg-libzk-01">https://datatracker.ietf.org/doc/html/draft-google-cfrg-libzk-01</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="I-D.ietf-privacypass-arc-crypto">[I-D.ietf-privacypass-arc-crypto]</dt>
+<dt id="I-D.jms-mole-architecture">[I-D.jms-mole-architecture]</dt>
         <dd>
-<span class="refAuthor">Yun, C.</span>, <span class="refAuthor">Wood, C. A.</span>, and <span class="refAuthor">A. F. Faz-Hernandez</span>, <span class="refTitle">"Anonymous Rate-Limited Credentials Cryptography"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-privacypass-arc-crypto-01</span>, <time datetime="2026-03-02" class="refDate">2 March 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-privacypass-arc-crypto-01">https://datatracker.ietf.org/doc/html/draft-ietf-privacypass-arc-crypto-01</a>&gt;</span>. </dd>
+<span class="refAuthor">Schlesinger, S.</span>, <span class="refAuthor">Jackson, D.</span>, and <span class="refAuthor">T. Meunier</span>, <span class="refTitle">"Moderation of unLinkable Endorsements (MoLE) Architecture"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-jms-mole-architecture-00</span>, <time datetime="2026-07-06" class="refDate">6 July 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-jms-mole-architecture-00">https://datatracker.ietf.org/doc/html/draft-jms-mole-architecture-00</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="I-D.ietf-privacypass-arc-protocol">[I-D.ietf-privacypass-arc-protocol]</dt>
+<dt id="I-D.jms-mole-protocols">[I-D.jms-mole-protocols]</dt>
         <dd>
-<span class="refAuthor">Yun, C.</span>, <span class="refAuthor">Wood, C. A.</span>, and <span class="refAuthor">A. F. Faz-Hernandez</span>, <span class="refTitle">"Privacy Pass Issuance Protocol for Anonymous Rate-Limited Credentials"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-privacypass-arc-protocol-01</span>, <time datetime="2026-03-02" class="refDate">2 March 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-privacypass-arc-protocol-01">https://datatracker.ietf.org/doc/html/draft-ietf-privacypass-arc-protocol-01</a>&gt;</span>. </dd>
+<span class="refAuthor">Schlesinger, S.</span>, <span class="refAuthor">Jackson, D.</span>, and <span class="refAuthor">T. Meunier</span>, <span class="refTitle">"MoLE Protocols"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-jms-mole-protocols-00</span>, <time datetime="2026-07-06" class="refDate">6 July 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-jms-mole-protocols-00">https://datatracker.ietf.org/doc/html/draft-jms-mole-protocols-00</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
         <dd>
@@ -2054,12 +2003,8 @@ may not add to the server's ability to address these issues.<a href="#section-8.
 <span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8392">[RFC8392]</dt>
-        <dd>
-<span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Wahlstroem, E.</span>, <span class="refAuthor">Erdtman, S.</span>, and <span class="refAuthor">H. Tschofenig</span>, <span class="refTitle">"CBOR Web Token (CWT)"</span>, <span class="seriesInfo">RFC 8392</span>, <span class="seriesInfo">DOI 10.17487/RFC8392</span>, <time datetime="2018-05" class="refDate">May 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8392">https://www.rfc-editor.org/rfc/rfc8392</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="RFC9576">[RFC9576]</dt>
       <dd>
-<span class="refAuthor">Davidson, A.</span>, <span class="refAuthor">Iyengar, J.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"The Privacy Pass Architecture"</span>, <span class="seriesInfo">RFC 9576</span>, <span class="seriesInfo">DOI 10.17487/RFC9576</span>, <time datetime="2024-06" class="refDate">June 2024</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9576">https://www.rfc-editor.org/rfc/rfc9576</a>&gt;</span>. </dd>
+<span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Wahlstroem, E.</span>, <span class="refAuthor">Erdtman, S.</span>, and <span class="refAuthor">H. Tschofenig</span>, <span class="refTitle">"CBOR Web Token (CWT)"</span>, <span class="seriesInfo">RFC 8392</span>, <span class="seriesInfo">DOI 10.17487/RFC8392</span>, <time datetime="2018-05" class="refDate">May 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8392">https://www.rfc-editor.org/rfc/rfc8392</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 </dl>
 </section>
@@ -2080,7 +2025,7 @@ may not add to the server's ability to address these issues.<a href="#section-8.
 <dd class="break"></dd>
 <dt id="I-D.meunier-webbotauth-registry">[I-D.meunier-webbotauth-registry]</dt>
         <dd>
-<span class="refAuthor">Guerreiro, M.</span>, <span class="refAuthor">Kirazci, U.</span>, and <span class="refAuthor">T. Meunier</span>, <span class="refTitle">"Registry and Signature Agent card for Web bot auth"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-meunier-webbotauth-registry-01</span>, <time datetime="2025-10-20" class="refDate">20 October 2025</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-meunier-webbotauth-registry-01">https://datatracker.ietf.org/doc/html/draft-meunier-webbotauth-registry-01</a>&gt;</span>. </dd>
+<span class="refAuthor">Guerreiro, M.</span>, <span class="refAuthor">Kirazci, U.</span>, and <span class="refAuthor">T. Meunier</span>, <span class="refTitle">"Registry and Signature Agent card for Web bot auth"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-meunier-webbotauth-registry-03</span>, <time datetime="2026-06-26" class="refDate">26 June 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-meunier-webbotauth-registry-03">https://datatracker.ietf.org/doc/html/draft-meunier-webbotauth-registry-03</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="I-D.nottingham-webbotauth-use-cases">[I-D.nottingham-webbotauth-use-cases]</dt>
         <dd>
