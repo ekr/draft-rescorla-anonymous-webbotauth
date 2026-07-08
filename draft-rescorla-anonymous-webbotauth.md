@@ -278,10 +278,10 @@ In this model, the Client interacts with an Anchor, which is
 responsible for determining whether the client conforms to the
 required policy. The Anchor provides an Endorsement which can then
 be redeemed by the client with the Moderator for a Credential, which
-can then be presentated to Moderator at a future time in order
+can then be presented to the Moderator at a future time in order
 to provide anonymous authentication. The Moderator can be
-operated directly by the site/origin or can be separate from the
-site but cooperating with it.
+operated directly by the Site or can be separate from the
+Site but cooperating with it.
 
 MoLE supports a number of different types of Endorsement
 and Credential. For concreteness, this document describes the
@@ -371,7 +371,7 @@ section.
 
 In principle, it is possible to omit the use of Credentials
 and instead have the Client authenticate each transaction
-directly to the Origin. However, even efficient generic ZKP systems
+directly to the Site. However, even efficient generic ZKP systems
 like Longfellow-ZK have far higher computational and bandwidth
 costs than more limited systems such as Credential mechanisms
 provided in MoLE.
@@ -384,12 +384,15 @@ interactions.
 ### Other Endorsement Structures
 
 MoLE also includes an Endorsement mechanism called Issuer-Hiding Anonymous
-Token (IHAT). IHAT uses single-show endorsements, so that the Client
-needs to retrieve a new Endorsement for each Moderator. This is more
+Token (IHAT). IHAT uses single-show Endorsements, so the Client needs a
+fresh Endorsement for each Moderator. This is more
 computationally efficient than a generic ZKP and allows the Anchor
 to have more tight control of the rate at which the Client makes
 requests, but may be challenging in settings where the bot has to
-contact many sites, as with crawlers.
+contact many sites, as with crawlers. Endorsement mechanisms that support late
+binding of the Endorsement to a specific Moderator allow the Client to use one
+Anchor-issued Endorsement across multiple Moderators, while still letting each
+Moderator enforce its own redemption and rate-limit policy.
 
 # Issuance Models
 
