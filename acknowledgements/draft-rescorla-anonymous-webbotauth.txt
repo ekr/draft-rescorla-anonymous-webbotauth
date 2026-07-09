@@ -1,0 +1,714 @@
+
+
+
+
+Network Working Group                                        E. Rescorla
+Internet-Draft                                               Independent
+Intended status: Informational                              R. L. Barnes
+Expires: 10 January 2027                                           Cisco
+                                                             9 July 2026
+
+
+ Anonymous Bot Authentication: Authorization and Rate Limiting for Web
+                                 Agents
+               draft-rescorla-anonymous-webbotauth-latest
+
+Abstract
+
+   Automated agents ("bots") represent a large fraction of the traffic
+   to many Web sites.  In some cases, this traffic is desired, in others
+   undesired, and in yet others, desired as long as it remains within
+   certain rate limits.  This memo describes Anonymous Bot
+   Authentication (ABA), a system that allows Web site operators to
+   distinguish wanted from unwanted traffic, while not tying a given
+   request to a specific sender.
+
+About This Document
+
+   This note is to be removed before publishing as an RFC.
+
+   The latest revision of this draft can be found at
+   https://ekr.github.io/draft-rescorla-anonymous-webbotauth/draft-
+   rescorla-anonymous-webbotauth.html.  Status information for this
+   document may be found at https://datatracker.ietf.org/doc/draft-
+   rescorla-anonymous-webbotauth/.
+
+   Source for this draft and an issue tracker can be found at
+   https://github.com/ekr/draft-rescorla-anonymous-webbotauth.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 10 January 2027.
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction
+   2.  Architectural Overview
+     2.1.  Trade-offs
+     2.2.  Rate Limiting
+   3.  Concrete Implementation With MoLE
+     3.1.  Providing Endorsement to the Moderator
+     3.2.  Alternate Cryptographic Approaches
+       3.2.1.  Only Generic Zero-Knowledge Proofs
+       3.2.2.  Other Endorsement Structures
+   4.  Issuance Models
+     4.1.  Independent Anchors
+     4.2.  Server as Anchor
+     4.3.  Number of Anchors
+   5.  Relationship to Browser Authentication
+   6.  Use Case Analysis
+     6.1.  Site Use Cases
+       6.1.1.  Mitigating Volumetric Abuse by Bots
+       6.1.2.  Controlling Access by Bots
+       6.1.3.  Providing Different Content to Bots
+       6.1.4.  Auditing Bot Behavior
+       6.1.5.  Classifying Traffic
+       6.1.6.  Authenticating Site Services
+     6.2.  Bot Use Cases
+       6.2.1.  IP Address Mobility
+       6.2.2.  Sharing IP Addresses
+       6.2.3.  Robots.txt Alignment
+       6.2.4.  Conveying Contextual Information
+   7.  Conventions and Definitions
+   8.  Security Considerations
+     8.1.  Anonymity Set
+     8.2.  Credential Misuse
+   9.  IANA Considerations
+   10. References
+     10.1.  Normative References
+     10.2.  Informative References
+   Acknowledgments
+   Authors' Addresses
+
+1.  Introduction
+
+   DISCLAIMER: This is a work-in-progress draft and has not yet seen
+   significant security analysis.  It is being published at an early
+   stage for discussion purposes.
+
+   Automated agents ("bots") represent a large fraction of the traffic
+   to many Web sites.  For example, Wikimedia reports that about 35% of
+   its traffic is from bots [PCMag-Wikipedia] and Cloudflare reports
+   that over 50% of traffic is automated [Cloudflare-2025].  High
+   traffic loads--even when from otherwise desired bots--can have
+   negative impacts on sites in terms of performance, stability, and
+   operational costs.
+
+   In addition, there may be certain types of bot traffic that sites
+   wish to heavily restrict or block entirely.  For example:
+
+   *  Volumetric traffic intended to create a DoS attack on the site.
+
+   *  Non-volumetric traffic intended to attack the site.
+
+   *  Scraping for specific purposes such as training AI agents.
+
+   [I-D.nottingham-webbotauth-use-cases] provides a more complete list
+   of potential use cases.
+
+   In response to this approach, there have been proposals to
+   authenticate automated clients.  Sites can use behavioral analysis to
+   determine when traffic from a given endpoint appears bot-like (e.g.,
+   is high volume, has low latency between requests, appears to be
+   retrieving the entire site, etc.) and restrict access by those
+   endpoints unless they authenticate and the resulting identity is
+   acceptable to the site.  [I-D.meunier-webbotauth-httpsig-protocol]
+   describes one such architecture, where identities are rooted in the
+   DNS and bots use digital signatures to tie their activity to a given
+   identity.
+
+   While directly identifying each bot allows the site to precisely
+   monitor bots' behavior and restrict or block bots that it believes
+   are misbehaving, it also has potential negative effects on the open
+   Web, including:
+
+   *  Allowing sites to precisely discriminate against specific bots,
+      even when those bots are acting in the public interest.  For
+      example:
+
+      -  Government sites might block bots which are tracking law
+         enforcement activity.
+
+      -  Employment or housing sites might block bots which are
+         monitoring for discriminatory behavior.
+
+      -  Shopping sites might block bots used for price comparison.
+
+   *  Preventing users and groups from being able to anonymously
+      retrieve Web content using automated tools.
+
+   In many use cases, it is possible to resolve this tension using
+   anonymous credentials.  When a bot presents an anonymous credential,
+   the Web site learns that the bot is part of some set of authorized
+   bots -- say those whose operators have agreed to good behavior -- and
+   not the specific identity of the bot or the bot operator.
+
+   This document describes an approach for using anonymous credentials
+   to authenticate bots to websites.  In addition to laying out how the
+   system works, we describe the trade-offs between anonymity and fine-
+   grained abuse mitigation.
+
+2.  Architectural Overview
+
+   The overall structure of ABA is shown in Figure 1.
+
+   Alice         Bob           Anchor             Site
+
+   Register --------------------->
+   <----------- Endorsement[Alice]
+                 Register ------->
+            <---- Endorsement[Bob]
+
+   Request + Endorsement ---------------------------->
+                                Site only knows Anchor
+                                      not Alice or Bob
+   <------------------------------------------Response
+
+                      Figure 1: Architectural Overview
+
+   Note: we are borrowing terms here from MoLE
+   [I-D.jms-mole-architecture].
+
+   Prior to contacting the site, Alice and Bob both register with a
+   credential Anchor, which is responsible for evaluating whether they
+   comply with the Anchor's policies.  They each are issued an anonymous
+   credential, which they can use to authenticate to the server.  What
+   makes the credential anonymous is that the site only learns that
+   someone with a credential from the Anchor is authenticating, not
+   whether it's Alice or Bob. This prevents the site from discriminating
+   _between_ customers of the same anchor, although it can discriminate
+   between anchors.
+
+   As a result, while it is possible to distinguish authenticated from
+   unauthenticated bots, it is not possible to use the authentication
+   method to either (1) selectively block individual bots(2) determine
+   which bots are accessing which resources or (3) link multiple visits
+   by the same bot.  It may still be possible to identify bots via other
+   mechanisms such as IP address or fingerprinting.
+
+   In some cases it may be sufficient merely to identify the anchor, for
+   instance if the anchor performs some vetting to ensure policy
+   compliance.  However, in some cases this may be insufficient, as
+   discussed below.
+
+2.1.  Trade-offs
+
+   Assuring the anonymity of bot requests means imposes some limits on
+   how this authentication mechanism can be used to counter abuse.
+   These trade-offs are discussed in detail in Section 6, and the below
+   bullets provide a summary:
+
+   *  ABA supports:
+
+      -  Rate-limiting of requests by a a single bot
+
+      -  Providing separate content to bots vs. humans
+
+      -  Conditioning access based on a bot meeting certain criteria
+
+      -  Conditioning access based on participation in some scheme or
+         protocol
+
+      -  Classifying human vs. bot traffic
+
+      -  IP address mobility and sharing of IP addresses
+
+      -  Unlinkability between authenticated requests by the same client
+
+   *  ABA does not support:
+
+      -  Allow lists / deny lists
+
+      -  Auditing bot behavior
+
+      -  Authenticating site services
+
+   Essentially, abuse controls that rely on knowing the identity of the
+   abusive party are incompatible with anonymous authentication.
+
+2.2.  Rate Limiting
+
+   In some cases it may be desirable to limit any individual agent to a
+   specific number of requests.  For example, a given Anchor may have a
+   large number of subscribers but only a few may access a given site.
+   In this case, overall rate limits for an anchor will not be
+   effective, but individual rate limits are.
+
+3.  Concrete Implementation With MoLE
+
+   This section describes how to implement ABA using mechanisms from
+   MoLE [I-D.jms-mole-architecture].  The MoLE architecture has three
+   entities, as shown in Figure 2, reproduced from Section 4 of
+   [I-D.jms-mole-architecture].
+
+      +--------+            +--------+              +-----------+
+      | Anchor |            | Client |              | Moderator |
+      +---+----+            +---+----+              +-----+-----+
+          |                     |                         |
+          |<~~~ Interaction ~~~>|                         |
+          |                     |                         |
+          +==== Endorsement ===>|                         |
+          |                     |                         |
+       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          |                     |                         |
+          |                     |<~~~~~ Interaction ~~~~~>|
+          |                     |                         |
+          |                +---- (If needed) -----------------.
+          |                |    |                         |    |
+          |                |    +------ Endorsement ----->|    |
+          |                |    |                         |    |
+          |                |    |<----- Credential -------+    |
+          |                |    |                         |    |
+          |                 `---------------------------------'
+          |                     |                         |
+          |                     +====== Presentation ====>|
+          |                     |                         |
+
+                        Figure 2: MoLE Architecture
+
+   In this model, the Client interacts with an Anchor, which is
+   responsible for determining whether the client conforms to the
+   required policy.  The Anchor provides an Endorsement which can then
+   be redeemed by the client with the Moderator for a Credential, which
+   can then be presented to the Moderator at a future time in order to
+   provide anonymous authentication.  The Moderator can be operated
+   directly by the Site or can be separate from the Site but cooperating
+   with it.
+
+   MoLE supports a number of different types of Endorsement and
+   Credential.  For concreteness, this document describes the use of
+   Longfellow-based Endorsements and ACT-based Credentials (Sections 4.2
+   and 5.1 of [I-D.jms-mole-protocols] respectively).  Other Endorsement
+   and Credentials may have somewhat different operational properties,
+   and are covered briefly in Section 3.2.2.
+
+   When a new Client is deployed, it first must register with some set
+   of Anchors.  These Anchors will require the bot to demonstrate that
+   it complies with their policies, for instance that it is a registered
+   corporation, holds a domain name or an IP address block, etc.  Once
+   the Anchor is satisfied, it issues a Endorsement to the Client in the
+   form of a CWT [RFC8392] signed by the Anchor.  This Endorsement can
+   be used to authenticate to an arbitrary number of Moderators.
+
+   When a client contacts a new site for which it does not yet have a
+   Credential, the client uses the Endorsement to authenticate to the
+   Moderator and request a Credential.  This authentication is performed
+   anonymously using a zero-knowledge proof that it has a valid
+   Endorsement so that the Moderator only learns the following
+   information:
+
+   1.  This Client has been authenticated by the Anchor.
+
+   2.  This Client has not authenticated to the Moderator previously
+       using this Endorsement within a given time window.
+
+   Assuming that the Client's proof verifies correctly and the Anchor is
+   acceptable, the Moderator issues a Credential.  Each credential is
+   associated with a usage limit, which may be Anchor-dependent.  For
+   instance, if the Anchor has a policy designed for high traffic bots,
+   the Moderator might use usage rate limit, whereas if the policy is
+   designed for low traffic bots, the Moderator might use a lower usage
+   limit.  Note that the choice of usage limit is entirely up to the
+   Moderator, but because all Clients authenticated by a given Anchor
+   are within the same anonymity set, it cannot use different per-Client
+   usage limits to multiple Clients attested to by the same Anchor.
+
+   Once the Client has a Credential it can use it to authenticate to the
+   Moderator repeatedly.
+
+3.1.  Providing Endorsement to the Moderator
+
+   The protocol for Endorsement to the Moderator is designed to meet the
+   following requirements:
+
+   *  A Endorsement can be used with an arbitrary number of Moderators.
+
+   *  A Endorsement can only be used once with a single Moderator within
+      a given time window
+
+   *  Endorsement presentations are unlinkable, both between Moderator
+      and Anchor and between Moderators.
+
+   These requirements can be met by using a signed credential (in this
+   case, a CWT [RFC8392]), along with a generic circuit-based zero-
+   knowledge proof system (in this case Longfellow-ZK
+   [I-D.google-cfrg-libzk]).  The interaction between the Anchor and the
+   Client just yields an ordinary CWT and then the Client proves in
+   zero-knowledge that they have a valid Endorsement from a given
+   Anchor.
+
+   In order to prevent replay, the proof also includes an Moderator-
+   specific nullifier tied to the Moderator's domain name and the
+   current time window.  While the proof itself varies between
+   presentations, the nullifier remains the same and therefore can be
+   used to detect replay.
+
+   Because we are using a generic ZK system it should also be possible
+   to use it to conceal the Anchor if desired: for example if there are
+   multiple Anchors who follow equivalent vetting procedures, then the
+   Moderator does not need to know which Anchor the Client used; the ZKP
+   can be designed to prove that the Client has a Endorsement from one
+   of a set of Anchors within the same equivalence class; of course, the
+   Moderator will need to use the same usage limit for all such Anchors.
+
+   Note: The Longfellow nullifier mechanism in MoLE does not appear to
+   include the Moderator's identity, thus potentially precluding
+   Endorsement reuse. [[https://github.com/Moderation-of-unLinkable-
+   Endorsements/internet-drafts/issues/28]]
+
+3.2.  Alternate Cryptographic Approaches
+
+   This section considers a number of alternate cryptographic approaches
+   and explains the choice of primitives in this section.
+
+3.2.1.  Only Generic Zero-Knowledge Proofs
+
+   In principle, it is possible to omit the use of Credentials and
+   instead have the Client authenticate each transaction directly to the
+   Site.  However, even efficient generic ZKP systems like Longfellow-ZK
+   have far higher computational and bandwidth costs than more limited
+   systems such as Credential mechanisms provided in MoLE.  Using a
+   generic ZKP system to demonstrate ownership of an attested
+   Endorsement to the Moderator and then using that single interaction
+   to obtain a Credential makes it possible to amortize the generic
+   proof over a large number of subsequent interactions.
+
+3.2.2.  Other Endorsement Structures
+
+   MoLE also includes an Endorsement mechanism called Issuer-Hiding
+   Anonymous Token (IHAT).  IHAT uses single-show Endorsements, so the
+   Client needs a fresh Endorsement for each Moderator.  This is more
+   computationally efficient than a generic ZKP and allows the Anchor to
+   have more tight control of the rate at which the Client makes
+   requests, but may be challenging in settings where the bot has to
+   contact many sites, as with crawlers.  Endorsement mechanisms that
+   support late binding of the Endorsement to a specific Moderator allow
+   the Client to use one Anchor-issued Endorsement across multiple
+   Moderators, while still letting each Moderator enforce its own
+   redemption and rate-limit policy.
+
+4.  Issuance Models
+
+   Anonymous credentials are compatible with a variety of issuance
+   models, as discussed in this section.
+
+4.1.  Independent Anchors
+
+   Much like millions of websites rely on a much smaller number of
+   independent WebPKI certificate authorities, it is possible to have a
+   system of independent Anchors that are broadly relied upon by many
+   websites.  Each anchor could publish the policy that it uses to issue
+   credentials (e.g., verifying corporate existence, subject pays $100,
+   etc.).  Sites can then select which anchors have policies they are
+   willing to accept.  It is also possible to have multiple Anchors who
+   conform to a common set of policies, as in the WebPKI, where each CA
+   has to meet the same requirements, but site operators have the choice
+   of which CA to use.
+
+4.2.  Server as Anchor
+
+   It is also possible for a server to act as their own Anchor.  This is
+   not likely to be practical for small sites, as bots will simply opt
+   not to authenticate to those sites at all.  However, a large CDN
+   which hosts many sites might opt to operate its own Anchor, and it
+   could be practical for bots to register with such an Anchor.  Note
+   that this approach makes it possible for the Anchor to refuse service
+   to individual Clients, but not to selectively do so for individual
+   customers unless it uses separate Moderators for each of those
+   customers.
+
+   The ZKP element of ABA ensures that clients remain anonymous even in
+   this case, since the client's redemption of an Endorsement is not
+   linkable to its issuance.
+
+4.3.  Number of Anchors
+
+   In general, it is desirable for bots to be able to acquire a
+   relatively small number of credentials and have high confidence that
+   those credentials will be compatible with most if not all of the
+   sites that the bot wishes to contact.  This can be most
+   straightforwardly accomplished if there is only a small number of
+   anchors, but it can also work if there are a larger number of anchors
+   but sites converge on a relatively small number of policies
+   (expressed as which anchors they support) such that a bot can acquire
+   a set of credentials that covers all of those policies.  The least
+   desirable outcome is if bots routinely are prompted to provide
+   credentials for a new anchor.
+
+5.  Relationship to Browser Authentication
+
+   There is significant overlap with existing work on anonymous
+   authentication happening in the PrivacyPass WG and in the W3C
+   AntiFraud Community Group.  While that work is directed towards
+   access control for users, the same cryptographic techniques can be
+   used to authenticate bots.  A good description of the vision and
+   requirements can be found at [PACT-Issue], and the MoLE effort that
+   has grown out of it.
+
+6.  Use Case Analysis
+
+   [I-D.nottingham-webbotauth-use-cases] describes a set of use cases
+   for web bot authentication.  The architecture described in this
+   document address some but not all of these use cases.  This is
+   intentional rather than a deficiency; the objective is to address use
+   cases which are compatible with limiting the negative impact of bots
+   while avoiding making it trivial for sites to discriminate against
+   individual bots.  The remainder of this section addresses each use
+   case individually.
+
+6.1.  Site Use Cases
+
+6.1.1.  Mitigating Volumetric Abuse by Bots
+
+   This document directly addresses the topic of volumetric abuse,
+   because bots can be authenticated and authenticated bots can be
+   restricted to specific bandwidth limits.  Once a bot has exceeded its
+   limit, it can be blocked.
+
+6.1.2.  Controlling Access by Bots
+
+   [I-D.nottingham-webbotauth-use-cases] provides the following example
+   applications of controlling access:
+
+      -  Only allow access by bots on an allow list;
+
+      -  Disallow access to bots on an explicit deny list;
+
+      -  Condition access upon meeting some criteria (e.g., non-profit,
+         certification by a third party);
+
+      -  Condition access upon participation in some scheme or protocol
+         (e.g., payment for access);
+
+      Note that the first two imply some notion of bots being tied to a
+      real-world identity, whereas the remaining do not necessarily
+      require it.
+
+   ABA can be used for the second two use cases and can be used for some
+   versions of the first two use cases.  However, the more fine-grained
+   controls are used (e.g., by having many Anchors with different
+   policies) the worse the privacy and scalability properties of the
+   system become.n
+
+6.1.3.  Providing Different Content to Bots
+
+   The architecture in this document may be usable to provide different
+   content to bots generally than humans depending on the structure of
+   anchors (e.g., does a given anchor issue to both bots and to humans)
+   and whether techniques are used to conceal which anchor is in use.
+   However, they are not generally useful to provide different content
+   to specific bots.
+
+6.1.4.  Auditing Bot Behavior
+
+   This use case is not addressed by this document.
+
+6.1.5.  Classifying Traffic
+
+   Because this use case does not depend on determining which bot is
+   which, but only which traffic is human versus bot, the architecture
+   in this document may be able to address this use case, depending on
+   the ultimate deployment model.
+
+6.1.6.  Authenticating Site Services
+
+   This use case is not addressed by this document.
+
+6.2.  Bot Use Cases
+
+6.2.1.  IP Address Mobility
+
+   ABA provides authentication for bots independent of IP address.
+   Because ABA authentication is at the Anchor rather than the Client
+   level, it is not possible to use ABA to build bot-specific
+   reputations based on observed bot activity; instead the Anchor is
+   responsible for assessing bots and then providing that information to
+   sites.
+
+6.2.2.  Sharing IP Addresses
+
+   Because ABA provides authentication independent of IP address, it
+   allows sites to discriminate between unauthenticated users of an IP
+   address and those which are ABA-authenticated, thus reducing the
+   negative reputational side effects of misuse by unauthenticated users
+   sharing the same IP address.
+
+6.2.3.  Robots.txt Alignment
+
+   This use case is not addressed by this document.
+
+6.2.4.  Conveying Contextual Information
+
+   Because different Anchors can have different policies and Anchors can
+   have multiple policies, ABA allows for limited conveyance of
+   contextual information.  While in principle this information can be
+   arbitrarily fine-grained, coarse-grained information ensures a larger
+   anonymity set (see Section 4.3).
+
+7.  Conventions and Definitions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+8.  Security Considerations
+
+   The precise security and privacy details of a system of this type
+   depend on the detailed cryptographic mechanism being deployed.
+   However, it is possible to make some general observations.
+
+8.1.  Anonymity Set
+
+   The anonymity set for a given transaction is the set of credentials
+   associated with a given Anchor, or, if Anchor hiding is used, the set
+   of credentials associated with the set of anchors.  However, it is
+   still possible to learn information about the client by manipulating
+   the Anchor set.  For example, a site acting as an Anchor could use
+   different keys for each user or a site could use different Anchor
+   subsets to identify which of a set of Anchors was in use.
+   Transparency/consistency mechanisms like
+   [I-D.ietf-privacypass-key-consistency] may be useful in detecting
+   this form of attack.
+
+8.2.  Credential Misuse
+
+   Because clients are anonymous, some forms of misuse are harder to
+   manage.  For example:
+
+   *  Two clients can collude to exceed rate limits if they are
+      interacting with disjoint sites.
+
+   *  If registration standards are low and registration is cheap a bot
+      can obtain multiple credentials.
+
+   *  Patterns of misuse (e.g., credential stuffing) become harder to
+      detect.
+
+   Note that existing mechanisms, such as IP address, will continue to
+   be usable, but the techniques described in this document may not add
+   to the server's ability to address these issues.
+
+9.  IANA Considerations
+
+   This document has no IANA actions.
+
+10.  References
+
+10.1.  Normative References
+
+   [I-D.google-cfrg-libzk]
+              Frigo, M. and A. shelat, "The Longfellow Zero-knowledge
+              Scheme", Work in Progress, Internet-Draft, draft-google-
+              cfrg-libzk-01, 2 September 2025,
+              <https://datatracker.ietf.org/doc/html/draft-google-cfrg-
+              libzk-01>.
+
+   [I-D.jms-mole-architecture]
+              Schlesinger, S., Jackson, D., and T. Meunier, "Moderation
+              of unLinkable Endorsements (MoLE) Architecture", Work in
+              Progress, Internet-Draft, draft-jms-mole-architecture-00,
+              6 July 2026, <https://datatracker.ietf.org/doc/html/draft-
+              jms-mole-architecture-00>.
+
+   [I-D.jms-mole-protocols]
+              Schlesinger, S., Jackson, D., and T. Meunier, "MoLE
+              Protocols", Work in Progress, Internet-Draft, draft-jms-
+              mole-protocols-00, 6 July 2026,
+              <https://datatracker.ietf.org/doc/html/draft-jms-mole-
+              protocols-00>.
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/rfc/rfc2119>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+   [RFC8392]  Jones, M., Wahlstroem, E., Erdtman, S., and H. Tschofenig,
+              "CBOR Web Token (CWT)", RFC 8392, DOI 10.17487/RFC8392,
+              May 2018, <https://www.rfc-editor.org/rfc/rfc8392>.
+
+10.2.  Informative References
+
+   [Cloudflare-2025]
+              Cloudflare, "Cloudflare 2025 Year in Review", 2025,
+              <https://radar.cloudflare.com/year-in-review/2025>.
+
+   [I-D.ietf-privacypass-key-consistency]
+              Davidson, A., Finkel, M., Thomson, M., and C. A. Wood,
+              "Key Consistency and Discovery", Work in Progress,
+              Internet-Draft, draft-ietf-privacypass-key-consistency-01,
+              10 July 2023, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-privacypass-key-consistency-01>.
+
+   [I-D.meunier-webbotauth-httpsig-protocol]
+              Meunier, T. and S. Major, "HTTP Message Signatures for
+              automated traffic", Work in Progress, Internet-Draft,
+              draft-meunier-webbotauth-httpsig-protocol-00, 26 June
+              2026, <https://datatracker.ietf.org/doc/html/draft-
+              meunier-webbotauth-httpsig-protocol-00>.
+
+   [I-D.nottingham-webbotauth-use-cases]
+              Nottingham, M., "Use Cases for Authentication of Web
+              Bots", Work in Progress, Internet-Draft, draft-nottingham-
+              webbotauth-use-cases-02, 1 April 2026,
+              <https://datatracker.ietf.org/doc/html/draft-nottingham-
+              webbotauth-use-cases-02>.
+
+   [PACT-Issue]
+              Jackson, D., "Private Access Control Tokens", 2 December
+              2025,
+              <https://github.com/antifraudcg/proposals/issues/22>.
+
+   [PCMag-Wikipedia]
+              Kan, L., "Wikipedia Faces Flood of AI Bots That Are
+              'Eating Bandwidth,' Raising Costs", 14 February 2024,
+              <https://www.pcmag.com/news/wikipedia-faces-flood-of-ai-
+              bots-that-are-eating-bandwidth-raising-costs>.
+
+Acknowledgments
+
+   This document benefited from helpful comments from Dennis Jackson and
+   Thibault Meunier.
+
+Authors' Addresses
+
+   Eric Rescorla
+   Independent
+   Email: ekr@rtfm.com
+
+
+   Richard L. Barnes
+   Cisco
+   Email: rlb@ipv.sx
