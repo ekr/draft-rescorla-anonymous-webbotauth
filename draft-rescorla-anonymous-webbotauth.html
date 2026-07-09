@@ -1057,7 +1057,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Rescorla &amp; Barnes</td>
-<td class="center">Expires 8 January 2027</td>
+<td class="center">Expires 10 January 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1070,12 +1070,12 @@ svg {
 <dd class="internet-draft">draft-rescorla-anonymous-webbotauth-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-07-07" class="published">7 July 2026</time>
+<time datetime="2026-07-09" class="published">9 July 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-01-08">8 January 2027</time></dd>
+<dd class="expires"><time datetime="2027-01-10">10 January 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1130,7 +1130,7 @@ sender.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 8 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 10 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1531,10 +1531,10 @@ of <span>[<a href="#I-D.jms-mole-architecture" class="cite xref">I-D.jms-mole-ar
 responsible for determining whether the client conforms to the
 required policy. The Anchor provides an Endorsement which can then
 be redeemed by the client with the Moderator for a Credential, which
-can then be presentated to Moderator at a future time in order
+can then be presented to the Moderator at a future time in order
 to provide anonymous authentication. The Moderator can be
-operated directly by the site/origin or can be separate from the
-site but cooperating with it.<a href="#section-3-3" class="pilcrow">¶</a></p>
+operated directly by the Site or can be separate from the
+Site but cooperating with it.<a href="#section-3-3" class="pilcrow">¶</a></p>
 <p id="section-3-4">MoLE supports a number of different types of Endorsement
 and Credential. For concreteness, this document describes the
 use of Longfellow-based Endorsements and ACT-based Credentials
@@ -1634,7 +1634,7 @@ section.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
           </h4>
 <p id="section-3.2.1-1">In principle, it is possible to omit the use of Credentials
 and instead have the Client authenticate each transaction
-directly to the Origin. However, even efficient generic ZKP systems
+directly to the Site. However, even efficient generic ZKP systems
 like Longfellow-ZK have far higher computational and bandwidth
 costs than more limited systems such as Credential mechanisms
 provided in MoLE.
@@ -1651,12 +1651,15 @@ interactions.<a href="#section-3.2.1-1" class="pilcrow">¶</a></p>
 <a href="#section-3.2.2" class="section-number selfRef">3.2.2. </a><a href="#name-other-endorsement-structure" class="section-name selfRef">Other Endorsement Structures</a>
           </h4>
 <p id="section-3.2.2-1">MoLE also includes an Endorsement mechanism called Issuer-Hiding Anonymous
-Token (IHAT). IHAT uses single-show endorsements, so that the Client
-needs to retrieve a new Endorsement for each Moderator. This is more
+Token (IHAT). IHAT uses single-show Endorsements, so the Client needs a
+fresh Endorsement for each Moderator. This is more
 computationally efficient than a generic ZKP and allows the Anchor
 to have more tight control of the rate at which the Client makes
 requests, but may be challenging in settings where the bot has to
-contact many sites, as with crawlers.<a href="#section-3.2.2-1" class="pilcrow">¶</a></p>
+contact many sites, as with crawlers. Endorsement mechanisms that support late
+binding of the Endorsement to a specific Moderator allow the Client to use one
+Anchor-issued Endorsement across multiple Moderators, while still letting each
+Moderator enforce its own redemption and rate-limit policy.<a href="#section-3.2.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
