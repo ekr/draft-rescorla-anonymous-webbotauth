@@ -1,0 +1,137 @@
+{
+  "magic": "E!vIA5L86J2I",
+  "timestamp": "2026-07-09T00:23:16.070040+00:00",
+  "repo": "ekr/draft-rescorla-anonymous-webbotauth",
+  "labels": [
+    {
+      "name": "bug",
+      "description": "Something isn't working",
+      "color": "d73a4a"
+    },
+    {
+      "name": "documentation",
+      "description": "Improvements or additions to documentation",
+      "color": "0075ca"
+    },
+    {
+      "name": "duplicate",
+      "description": "This issue or pull request already exists",
+      "color": "cfd3d7"
+    },
+    {
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    },
+    {
+      "name": "good first issue",
+      "description": "Good for newcomers",
+      "color": "7057ff"
+    },
+    {
+      "name": "help wanted",
+      "description": "Extra attention is needed",
+      "color": "008672"
+    },
+    {
+      "name": "invalid",
+      "description": "This doesn't seem right",
+      "color": "e4e669"
+    },
+    {
+      "name": "question",
+      "description": "Further information is requested",
+      "color": "d876e3"
+    },
+    {
+      "name": "wontfix",
+      "description": "This will not be worked on",
+      "color": "ffffff"
+    }
+  ],
+  "issues": [],
+  "pulls": [
+    {
+      "number": 1,
+      "id": "PR_kwDORxrKts7QoR9S",
+      "title": "RLB comments",
+      "url": "https://github.com/ekr/draft-rescorla-anonymous-webbotauth/pull/1",
+      "state": "MERGED",
+      "author": "bifurcation",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2026-04-07T21:44:44Z",
+      "updatedAt": "2026-04-07T21:59:36Z",
+      "baseRepository": "ekr/draft-rescorla-anonymous-webbotauth",
+      "baseRefName": "main",
+      "baseRefOid": "bcef6595880239a776d446378a7c19348631aa59",
+      "headRepository": "ekr/draft-rescorla-anonymous-webbotauth",
+      "headRefName": "rlb-edit-2",
+      "headRefOid": "040f4247b650d8a68ebfb23157a7332cac9f3404",
+      "closedAt": "2026-04-07T21:59:36Z",
+      "mergedAt": "2026-04-07T21:59:36Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "7b15b6f8fca1729bdd1eff803f402c5f3a5be787"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 2,
+      "id": "PR_kwDORxrKts7u6NXJ",
+      "title": "Adjust PrivacyPass terminology",
+      "url": "https://github.com/ekr/draft-rescorla-anonymous-webbotauth/pull/2",
+      "state": "MERGED",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2026-07-07T16:08:00Z",
+      "updatedAt": "2026-07-07T16:10:00Z",
+      "baseRepository": "ekr/draft-rescorla-anonymous-webbotauth",
+      "baseRefName": "main",
+      "baseRefOid": "01c7c88c56dd62f3a1f779598de451919c4b2645",
+      "headRepository": "ekr/draft-rescorla-anonymous-webbotauth",
+      "headRefName": "dennisjackson-patch-1",
+      "headRefOid": "5ebdec15243d94e5948ca1602dc1ffe21d5fd4ba",
+      "closedAt": "2026-07-07T16:10:00Z",
+      "mergedAt": "2026-07-07T16:10:00Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "13cd25064cdd4ad009f75ba2c7db0aa492f1cf1a"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 3,
+      "id": "PR_kwDORxrKts7vNcc8",
+      "title": "add a precision about late-binding of endorsement",
+      "url": "https://github.com/ekr/draft-rescorla-anonymous-webbotauth/pull/3",
+      "state": "OPEN",
+      "author": "thibmeu",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "late binding is desireable for certain bots such as crawlers that would interact with multiple sites, and for which the interaction with an anchor required by IHAT might become a bottleneck. add a precision there\r\n\r\nalso fixes a few typos and mole terminology alignment",
+      "createdAt": "2026-07-08T09:25:26Z",
+      "updatedAt": "2026-07-08T09:25:26Z",
+      "baseRepository": "ekr/draft-rescorla-anonymous-webbotauth",
+      "baseRefName": "main",
+      "baseRefOid": "fd8310ae46e85b142b72b723526cac9bca685234",
+      "headRepository": "thibmeu/draft-rescorla-anonymous-webbotauth",
+      "headRefName": "main",
+      "headRefOid": "1eb8d42044f4a2203790aefd8d29e4a83955d1e3",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    }
+  ]
+}
