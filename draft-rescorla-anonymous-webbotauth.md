@@ -604,4 +604,6 @@ This document has no IANA actions.
 # Acknowledgments
 {:numbered="false"}
 
-TODO acknowledge.
+This document benefited from helpful comments from Dennis Jackson
+and Thibault Meunier.
+
