@@ -143,7 +143,7 @@ we describe the trade-offs between anonymity and fine-grained abuse mitigation.
 
 The overall structure of ABA is shown in {{fig-architecture-overview}}.
 
-~~~
+~~~aasvg
 Alice         Bob           Anchor             Site
 
 Register --------------------->
@@ -165,6 +165,8 @@ credential Anchor, which is responsible for evaluating
 whether they comply with the Anchor's policies.
 They each are issued an anonymous credential, which
 they can use to authenticate to the server.  What makes the credential
+
+
 anonymous is that the site only learns that someone with a credential
 from the Anchor is authenticating, not whether it's Alice or Bob. This
 prevents the site from discriminating _between_ customers of the
@@ -247,7 +249,7 @@ This section describes how to implement ABA using mechanisms from MoLE
 entities, as shown in {{fig-mole-model}}, reproduced from Section 4
 of {{!I-D.jms-mole-architecture}}.
 
-~~~
+~~~aasvg
 
    +--------+            +--------+              +-----------+
    | Anchor |            | Client |              | Moderator |
